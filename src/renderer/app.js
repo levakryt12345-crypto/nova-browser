@@ -85,6 +85,16 @@ function applyTheme(mode) {
   document.documentElement.dataset.theme = mode;
 }
 
+function applyAppearance(a) {
+  if (!a) return;
+  const root = document.documentElement;
+  root.dataset.theme = a.theme || store.theme || 'dark';
+  root.dataset.accent = a.accent || 'violet';
+  root.dataset.scale = a.uiScale || 'medium';
+  document.body.classList.toggle('compact', !!a.compactChrome);
+  document.body.classList.toggle('close-always', !!a.showTabCloseAlways);
+}
+
 function toast(msg) {
   const el = $('#toast');
   if (!el) return;
@@ -244,6 +254,7 @@ function loadInitial() {
     store.version = s.version || '';
     store.userData = s.userData || '';
     applyTheme(s.theme || 'dark');
+    applyAppearance(s.appearance);
     renderTabs();
     renderNavState();
     updateAddressBar();
@@ -376,9 +387,10 @@ function initPopover() {
     store.version = s.version || '';
     store.userData = s.userData || '';
     applyTheme(s.theme || 'dark');
+    applyAppearance(s.appearance);
     const fn = panels[POPOVER_TYPE] || renderHistoryPanel;
     app.appendChild(fn());
-    api.on('theme:changed', (m) => applyTheme(m));
+api.on('theme:changed', (m) => applyAppearance(m));
     if (POPOVER_TYPE === 'downloads') {
       api.on('downloads:changed', (d) => {
         store.downloads = d || [];

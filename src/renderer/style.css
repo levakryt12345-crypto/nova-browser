@@ -1300,3 +1300,95 @@ body.home-page {
   font-size: 11px;
   color: var(--text-faint);
 }
+
+/* ---------- customization ---------- */
+
+html[data-accent="blue"] { --accent: #5aa2f0; --accent-soft: rgba(90,162,240,0.16); }
+html[data-accent="green"] { --accent: #4fbf9a; --accent-soft: rgba(79,191,154,0.16); }
+html[data-accent="amber"] { --accent: #e0a03f; --accent-soft: rgba(224,160,63,0.16); }
+html[data-accent="rose"] { --accent: #e06a8f; --accent-soft: rgba(224,106,143,0.16); }
+html[data-accent="teal"] { --accent: #3fbfb8; --accent-soft: rgba(63,191,184,0.16); }
+
+html[data-scale="small"] { --ui-font: 12px; }
+html[data-scale="medium"] { --ui-font: 13px; }
+html[data-scale="large"] { --ui-font: 14.5px; }
+
+body { font-size: var(--ui-font, 13px); }
+
+body.compact {
+  --chrome-h: 64px;
+  --tabstrip-h: 33px;
+  --toolbar-h: 31px;
+}
+
+body.compact #toolbar { padding: 0 10px 6px; }
+body.compact .tab { height: 25px; min-width: 80px; }
+body.compact #addr-wrap { height: 29px; }
+body.compact .icon-btn { width: 28px; height: 28px; }
+
+body.close-always .tab-close { opacity: 1; }
+
+/* ---------- home wallpaper ---------- */
+
+html[data-theme="dark"] body.home-page { background: #12131a; }
+html[data-theme="dark"][data-wallpaper="aurora"] body.home-page { background: radial-gradient(900px 600px at 20% 10%, #2a2f63 0%, transparent 60%), radial-gradient(800px 500px at 85% 90%, #432a63 0%, transparent 55%), #12131a; }
+html[data-theme="dark"][data-wallpaper="sunset"] body.home-page { background: radial-gradient(900px 600px at 75% 15%, #5a2f4d 0%, transparent 60%), radial-gradient(700px 500px at 15% 85%, #6b3a2a 0%, transparent 55%), #17130f; }
+html[data-theme="dark"][data-wallpaper="ocean"] body.home-page { background: radial-gradient(900px 600px at 15% 20%, #1f4a5c 0%, transparent 60%), radial-gradient(700px 500px at 85% 80%, #16344d 0%, transparent 55%), #0f1418; }
+html[data-theme="dark"][data-wallpaper="forest"] body.home-page { background: radial-gradient(900px 600px at 25% 15%, #24472e 0%, transparent 60%), radial-gradient(700px 500px at 80% 85%, #1e3b27 0%, transparent 55%), #10150f; }
+html[data-theme="dark"][data-wallpaper="mono"] body.home-page { background: radial-gradient(700px 500px at 50% 0%, #26272e 0%, transparent 60%), #12131a; }
+
+html[data-theme="light"] body.home-page { background: #f2f2f5; }
+html[data-theme="light"][data-wallpaper="aurora"] body.home-page { background: radial-gradient(900px 600px at 20% 10%, #dfe2ff 0%, transparent 60%), radial-gradient(800px 500px at 85% 90%, #e8dcf7 0%, transparent 55%), #f2f2f5; }
+html[data-theme="light"][data-wallpaper="sunset"] body.home-page { background: radial-gradient(900px 600px at 75% 15%, #ffe0d0 0%, transparent 60%), radial-gradient(700px 500px at 15% 85%, #f7d8c8 0%, transparent 55%), #f6f2ef; }
+html[data-theme="light"][data-wallpaper="ocean"] body.home-page { background: radial-gradient(900px 600px at 15% 20%, #d8ecf4 0%, transparent 60%), radial-gradient(700px 500px at 85% 80%, #d4e2f0 0%, transparent 55%), #f0f4f6; }
+html[data-theme="light"][data-wallpaper="forest"] body.home-page { background: radial-gradient(900px 600px at 25% 15%, #dcead8 0%, transparent 60%), radial-gradient(700px 500px at 80% 85%, #d8e6d2 0%, transparent 55%), #f2f5f0; }
+html[data-theme="light"][data-wallpaper="mono"] body.home-page { background: radial-gradient(700px 500px at 50% 0%, #e3e3e8 0%, transparent 60%), #f2f2f5; }
+
+.home-search { box-shadow: 0 2px 10px rgba(0, 0, 0, 0.12); }
+
+.home-link {
+  padding: 16px 10px;
+  border-radius: 16px;
+}
+
+.home-link img {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.18);
+}
+
+.home-bm-grid {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  max-width: 520px;
+  margin-top: 20px;
+}
+
+.home-bm {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  background: rgba(127, 127, 150, 0.10);
+  border: 1px solid var(--border);
+  border-radius: 13px;
+  cursor: pointer;
+  transition: background 0.15s ease, transform 0.1s ease;
+}
+
+.home-bm:hover {
+  background: rgba(127, 127, 150, 0.2);
+  transform: scale(1.06);
+}
+
+.home-bm img {
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+}

@@ -24,6 +24,7 @@ const INDEX_HTML = path.join(__dirname, '..', 'renderer', 'index.html');
 const PRELOAD = path.join(__dirname, '..', 'preload', 'preload.js');
 const SETTINGS_HTML = path.join(__dirname, '..', 'renderer', 'settings.html');
 const HOME_HTML = path.join(__dirname, '..', 'renderer', 'home.html');
+const SPLASH_HTML = path.join(__dirname, '..', 'renderer', 'splash.html');
 const ICON_PNG = path.join(PROJECT_ROOT, 'assets', 'icon.png');
 const AVATAR_PNG = path.join(PROJECT_ROOT, 'assets', 'avatar.png');
 
@@ -31,6 +32,9 @@ const SETTINGS_URL = 'nova://settings';
 const HOME_URL = 'nova://home';
 
 const CHROME_HEIGHT = 88;
+const CHROME_COMPACT = 64;
+const ACCENTS = ['violet', 'blue', 'green', 'amber', 'rose', 'teal'];
+const WALLPAPERS = ['aurora', 'sunset', 'ocean', 'forest', 'mono'];
 const DEFAULT_SETTINGS = {
   homePage: 'nova://home',
   searchEngine: 'google',
@@ -42,6 +46,16 @@ const DEFAULT_SETTINGS = {
   blockThirdPartyCookies: false,
   zoom: 1,
   downloadDir: null,
+  accent: 'violet',
+  uiScale: 'medium',
+  homeWallpaper: 'aurora',
+  showHomeLinks: true,
+  showHomeBookmarks: true,
+  showTabCloseAlways: false,
+  compactChrome: false,
+  clearOnExit: false,
+  downloadAsk: false,
+  confirmCloseTabs: false,
 };
 
 const SEARCH_ENGINES = {
@@ -93,6 +107,9 @@ const state = {
   verifyTimer: null,
   pendingPerm: new Map(),
   permSeq: 0,
+  splash: null,
+  revealed: false,
+  closingConfirmed: false,
 };
 
 const CRASH_LOG = path.join(PROJECT_ROOT, 'crash.log');
@@ -119,6 +136,22 @@ function settings() {
   return state.store.getSettings();
 }
 
+function chromeHeight() {
+  return settings().compactChrome ? CHROME_COMPACT : CHROME_HEIGHT;
+}
+
+function appearance() {
+  const s = settings();
+  return {
+    theme: resolvedTheme(),
+    accent: s.accent || 'violet',
+    uiScale: s.uiScale || 'medium',
+    homeWallpaper: s.homeWallpaper || 'aurora',
+    compactChrome: !!s.compactChrome,
+    showTabCloseAlways: !!s.showTabCloseAlways,
+  };
+}
+
 function resolvedTheme() {
   const s = settings();
   if (s.theme !== 'system') return s.theme;
@@ -128,8 +161,18 @@ function resolvedTheme() {
 function broadcast(channel, payload) {
   const targets = [state.win];
   if (state.popover && state.popover.win && !state.popover.win.isDestroyed()) targets.push(state.popover.win);
+  for (const t of state.tabs.values()) targets.push(t.wc);
   for (const w of targets) {
-    if (w && !w.isDestroyed()) w.webContents.send(channel, payload);
+    if (!w) continue;
+    try {
+      if (w.isDestroyed && w.isDestroyed()) continue;
+    } catch {
+      continue;
+    }
+    const wc = w.webContents ? w.webContents : w;
+    try {
+      if (!wc.isDestroyed()) wc.send(channel, payload);
+    } catch {}
   }
 }
 
@@ -160,7 +203,7 @@ function pushData() {
 }
 
 function pushTheme() {
-  broadcast('theme:changed', resolvedTheme());
+  broadcast('theme:changed', appearance());
 }
 
 function pushDownloads() {
@@ -171,11 +214,12 @@ function pushDownloads() {
 function layout() {
   if (!state.win || state.win.isDestroyed()) return;
   const [w, h] = state.win.getContentSize();
+  const ch = chromeHeight();
   for (const id of state.order) {
     const t = state.tabs.get(id);
     if (!t) continue;
     const active = id === state.activeId;
-    t.view.setBounds(active ? { x: 0, y: CHROME_HEIGHT, width: w, height: Math.max(0, h - CHROME_HEIGHT) } : { x: 0, y: 0, width: 0, height: 0 });
+    t.view.setBounds(active ? { x: 0, y: ch, width: w, height: Math.max(0, h - ch) } : { x: 0, y: 0, width: 0, height: 0 });
   }
 }
 
@@ -609,7 +653,7 @@ function snapshot() {
     bookmarks: state.store.getBookmarks(),
     history: state.store.getHistory(),
     settings: settings(),
-    theme: resolvedTheme(),
+    appearance: appearance(),
     version: app.getVersion(),
     searchEngines: SEARCH_ENGINES,
     searchUrl: (SEARCH_ENGINES[settings().searchEngine] || SEARCH_ENGINES.google).url,
@@ -695,6 +739,12 @@ function setupIpc() {
     if (typeof partial.downloadDir === 'string' && (partial.downloadDir === '' || partial.downloadDir.trim())) {
       safe.downloadDir = partial.downloadDir.trim();
     }
+    if (ACCENTS.includes(partial.accent)) safe.accent = partial.accent;
+    if (['small', 'medium', 'large'].includes(partial.uiScale)) safe.uiScale = partial.uiScale;
+    if (WALLPAPERS.includes(partial.homeWallpaper)) safe.homeWallpaper = partial.homeWallpaper;
+    for (const k of ['showHomeLinks', 'showHomeBookmarks', 'showTabCloseAlways', 'compactChrome', 'clearOnExit', 'downloadAsk', 'confirmCloseTabs']) {
+      if (typeof partial[k] === 'boolean') safe[k] = partial[k];
+    }
     state.store.setSettings(safe);
     const s = settings();
     for (const t of state.tabs.values()) {
@@ -703,6 +753,7 @@ function setupIpc() {
         t.wc.setZoomFactor(s.zoom);
       } catch {}
     }
+    layout();
     pushData();
     pushTheme();
   });
@@ -716,6 +767,7 @@ function setupIpc() {
         t.wc.setZoomFactor(s.zoom);
       } catch {}
     }
+    layout();
     pushData();
     pushTheme();
   });
@@ -857,7 +909,7 @@ class Popover {
     const mb = state.win.getContentBounds();
     const wa = screen.getDisplayMatching(mb).workArea;
     let x = mb.x + (typeof anchor.x === 'number' ? anchor.x : 60);
-    let y = mb.y + (typeof anchor.y === 'number' ? anchor.y : CHROME_HEIGHT) + 8;
+    let y = mb.y + (typeof anchor.y === 'number' ? anchor.y : chromeHeight()) + 8;
     x = Math.round(clamp(x, wa.x + 8, wa.x + wa.width - size.width - 8));
     y = Math.round(clamp(y, wa.y + 8, wa.y + wa.height - size.height - 8));
     this.win.setPosition(x, y);
@@ -963,16 +1015,27 @@ function setupVerify(wc, tabId) {
     const url = t ? t.url : wc.getURL();
     let title = '';
     let body = '';
+    let domNodes = 0;
     try {
       title = await wc.executeJavaScript('document.title');
       body = await wc.executeJavaScript('document.body ? document.body.innerText.slice(0, 300) : ""');
+      domNodes = await wc.executeJavaScript('document.body ? document.body.children.length : 0');
     } catch (err) {
       log('VERIFY_DOM_FAIL ' + err.message);
     }
     const okUrl = url.startsWith(VERIFY_URL);
     const okTitle = (title || '').trim().length > 0;
-    const okDom = (body || '').trim().length > 0;
+    const okDom = (body || '').trim().length > 0 || (url.startsWith('nova:') && domNodes > 0);
     let shot = false;
+    if (url.startsWith('nova:')) await new Promise((r) => setTimeout(r, 1500));
+    if (state.win) {
+      try {
+        state.win.show();
+        state.win.focus();
+        state.win.moveTop();
+      } catch {}
+    }
+    await new Promise((r) => setTimeout(r, 400));
     for (let attempt = 0; attempt < 5 && !shot; attempt++) {
       try {
         const img = await wc.capturePage();
@@ -991,6 +1054,75 @@ function setupVerify(wc, tabId) {
     clearTimeout(timeout);
     setTimeout(() => app.exit(result.ok ? 0 : 1), 500);
   });
+}
+
+function showSplash() {
+  if (VERIFY) return null;
+  try {
+    const wa = screen.getPrimaryDisplay().workArea;
+    const splash = new BrowserWindow({
+      width: wa.width,
+      height: wa.height,
+      x: wa.x,
+      y: wa.y,
+      frame: false,
+      resizable: false,
+      movable: false,
+      minimizable: false,
+      maximizable: false,
+      fullscreenable: false,
+      skipTaskbar: true,
+      show: false,
+      backgroundColor: '#12131a',
+      webPreferences: {
+        sandbox: true,
+        contextIsolation: true,
+        nodeIntegration: false,
+        spellcheck: false,
+      },
+    });
+    splash.setAlwaysOnTop(true, 'screen-saver');
+    splash.loadFile(SPLASH_HTML);
+    splash.showInactive();
+    state.splash = splash;
+    return splash;
+  } catch {
+    return null;
+  }
+}
+
+function revealBrowser() {
+  const splash = state.splash;
+  if (!splash || splash.isDestroyed()) {
+    if (state.win && !state.win.isDestroyed() && !state.win.isVisible()) state.win.show();
+    return;
+  }
+  try {
+    splash.webContents.executeJavaScript('document.documentElement.classList.add("out")');
+  } catch {}
+  if (state.win && !state.win.isDestroyed() && !state.win.isVisible()) state.win.show();
+  setTimeout(() => {
+    if (!splash.isDestroyed()) splash.destroy();
+    state.splash = null;
+  }, 950);
+}
+
+function waitForFirstPaint() {
+  const act = activeTab();
+  let fired = false;
+  const go = () => {
+    if (fired) return;
+    fired = true;
+    clearTimeout(fallback);
+    setTimeout(revealBrowser, 700);
+  };
+  const fallback = setTimeout(go, 4500);
+  if (act) {
+    act.wc.once('did-finish-load', go);
+    act.wc.once('did-fail-load', () => go());
+  } else {
+    go();
+  }
 }
 
 function createWindow() {
@@ -1027,6 +1159,28 @@ function createWindow() {
     app.quit();
   });
 
+  win.on('close', (e) => {
+    if (settings().confirmCloseTabs && state.order.length > 1 && !state.closingConfirmed) {
+      e.preventDefault();
+      dialog
+        .showMessageBox(win, {
+          type: 'warning',
+          title: 'Закрыть Nova Browser?',
+          message: 'В браузере открыто вкладок: ' + state.order.length,
+          detail: 'Все открытые вкладки будут закрыты.',
+          buttons: ['Закрыть', 'Отмена'],
+          defaultId: 0,
+          cancelId: 1,
+        })
+        .then(({ response }) => {
+          if (response === 0) {
+            state.closingConfirmed = true;
+            win.close();
+          }
+        });
+    }
+  });
+
   win.webContents.on('did-start-loading', () => {
     if (VERIFY) log('ui did-start-loading');
   });
@@ -1050,10 +1204,11 @@ function createWindow() {
   });
 
   win.loadFile(INDEX_HTML);
+  if (!VERIFY) showSplash();
   win.once('ready-to-show', () => {
     if (VERIFY) log('ready-to-show fired');
-    win.show();
     if (VERIFY) {
+      win.show();
       createTab(VERIFY_URL);
       return;
     }
@@ -1061,9 +1216,7 @@ function createWindow() {
     const saved = state.store.getTabsState();
     if (extUrl) {
       createTab(extUrl);
-      return;
-    }
-    if (settings().restoreTabs && saved.length) {
+    } else if (settings().restoreTabs && saved.length) {
       if (VERIFY) log('restoring tabs: ' + saved.length);
       for (const u of saved) {
         createTab(typeof u === 'string' ? u : (u && u.url) || '', { silent: true, defer: true });
@@ -1073,6 +1226,7 @@ function createWindow() {
     } else {
       createTab(settings().homePage);
     }
+    waitForFirstPaint();
   });
 }
 
@@ -1152,30 +1306,55 @@ if (!gotLock) {
 
     if (VERIFY) log('step: will-download handler');
     session.defaultSession.on('will-download', (event, item) => {
-      const id = ++state.dlSeq;
-      let filename = path.basename(item.getFilename());
-      const dlDir = settings().downloadDir || app.getPath('downloads');
-      let filePath = path.join(dlDir, filename);
-      const parsed = path.parse(filename);
-      let n = 1;
-      while (fs.existsSync(filePath)) {
-        filePath = path.join(app.getPath('downloads'), `${parsed.name} (${n++})${parsed.ext}`);
+      const start = () => {
+        const id = ++state.dlSeq;
+        let filename = path.basename(item.getFilename());
+        const dlDir = settings().downloadDir || app.getPath('downloads');
+        let filePath = path.join(dlDir, filename);
+        const parsed = path.parse(filename);
+        let n = 1;
+        while (fs.existsSync(filePath)) {
+          filePath = path.join(dlDir, `${parsed.name} (${n++})${parsed.ext}`);
+        }
+        item.setSavePath(filePath);
+        const rec = { id, filename, filePath, receivedBytes: 0, totalBytes: 0, status: 'in-progress', item };
+        state.downloads.set(id, rec);
+        item.on('updated', (e, st) => {
+          rec.receivedBytes = item.getReceivedBytes();
+          rec.totalBytes = item.getTotalBytes() || 0;
+          rec.status = st === 'interrupted' ? 'interrupted' : 'in-progress';
+          pushDownloads();
+        });
+        item.once('done', (e, st) => {
+          rec.status = st === 'completed' ? 'completed' : 'failed';
+          rec.receivedBytes = item.getReceivedBytes();
+          pushDownloads();
+        });
+        pushDownloads();
+      };
+      if (settings().downloadAsk) {
+        event.preventDefault();
+        dialog
+          .showMessageBox(state.win, {
+            type: 'question',
+            title: 'Загрузка файла',
+            message: 'Скачать файл?',
+            detail: item.getFilename(),
+            buttons: ['Скачать', 'Отмена'],
+            defaultId: 0,
+            cancelId: 1,
+          })
+          .then(({ response }) => {
+            if (response === 0) {
+              start();
+              item.resume();
+            } else {
+              item.cancel();
+            }
+          });
+      } else {
+        start();
       }
-      item.setSavePath(filePath);
-      const rec = { id, filename, filePath, receivedBytes: 0, totalBytes: 0, status: 'in-progress', item };
-      state.downloads.set(id, rec);
-      item.on('updated', (e, st) => {
-        rec.receivedBytes = item.getReceivedBytes();
-        rec.totalBytes = item.getTotalBytes() || 0;
-        rec.status = st === 'interrupted' ? 'interrupted' : 'in-progress';
-        pushDownloads();
-      });
-      item.once('done', (e, st) => {
-        rec.status = st === 'completed' ? 'completed' : 'failed';
-        rec.receivedBytes = item.getReceivedBytes();
-        pushDownloads();
-      });
-      pushDownloads();
     });
 
     nativeTheme.on('updated', () => pushTheme());
@@ -1190,4 +1369,13 @@ if (!gotLock) {
   });
 
   app.on('window-all-closed', () => app.quit());
+
+  app.on('will-quit', () => {
+    if (state.store && settings().clearOnExit) {
+      try {
+        state.store.clearHistory();
+        session.defaultSession.clearCache();
+      } catch {}
+    }
+  });
 }

@@ -4,24 +4,16 @@ const api = window.nova;
 const $ = (sel) => document.querySelector(sel);
 
 const QUICK = [
-  { name: 'Google', url: 'https://www.google.com', d: 'google.com' },
-  { name: 'YouTube', url: 'https://www.youtube.com', d: 'youtube.com' },
-  { name: 'Википедия', url: 'https://ru.wikipedia.org', d: 'wikipedia.org' },
-  { name: 'GitHub', url: 'https://github.com', d: 'github.com' },
-  { name: 'Яндекс', url: 'https://ya.ru', d: 'ya.ru' },
-  { name: 'Telegram', url: 'https://web.telegram.org', d: 'web.telegram.org' },
+  { url: 'https://www.google.com', d: 'google.com' },
+  { url: 'https://www.youtube.com', d: 'youtube.com' },
+  { url: 'https://ru.wikipedia.org', d: 'wikipedia.org' },
+  { url: 'https://github.com', d: 'github.com' },
+  { url: 'https://ya.ru', d: 'ya.ru' },
+  { url: 'https://web.telegram.org', d: 'web.telegram.org' },
 ];
 
 function esc(s) {
   return String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-}
-
-function greeting() {
-  const h = new Date().getHours();
-  if (h < 5) return 'Доброй ночи';
-  if (h < 12) return 'Доброе утро';
-  if (h < 18) return 'Добрый день';
-  return 'Добрый вечер';
 }
 
 function go(url) {
@@ -32,30 +24,33 @@ function favicon(d) {
   return 'https://www.google.com/s2/favicons?domain=' + encodeURIComponent(d) + '&sz=64';
 }
 
-function renderLinks() {
+function applyAppearance(a) {
+  const root = document.documentElement;
+  root.dataset.theme = a.theme || 'dark';
+  root.dataset.accent = a.accent || 'violet';
+  root.dataset.scale = a.uiScale || 'medium';
+  root.dataset.wallpaper = a.homeWallpaper || 'aurora';
+}
+
+function renderLinks(show) {
   const box = $('#home-links');
   box.innerHTML = '';
+  if (!show) return;
   for (const q of QUICK) {
     const a = document.createElement('button');
     a.className = 'home-link';
     a.title = q.d;
-    a.innerHTML = `<img src="${favicon(q.d)}" alt="" loading="lazy"><span>${esc(q.name)}</span>`;
+    a.innerHTML = `<img src="${favicon(q.d)}" alt="" loading="lazy">`;
     a.addEventListener('click', () => go(q.url));
     box.appendChild(a);
   }
 }
 
-function renderBookmarks(list) {
+function renderBookmarks(list, show) {
   const box = $('#home-bm-grid');
-  const wrap = $('#home-bookmarks');
   box.innerHTML = '';
-  const shown = (list || []).slice(0, 12);
-  if (!shown.length) {
-    wrap.hidden = true;
-    return;
-  }
-  wrap.hidden = false;
-  for (const b of shown) {
+  if (!show) return;
+  for (const b of (list || []).slice(0, 12)) {
     let d = '';
     try {
       d = new URL(b.url).hostname;
@@ -63,7 +58,7 @@ function renderBookmarks(list) {
     const a = document.createElement('button');
     a.className = 'home-bm';
     a.title = b.title || b.url;
-    a.innerHTML = `<img src="${favicon(d)}" alt="" loading="lazy"><span>${esc(b.title || b.url)}</span>`;
+    a.innerHTML = `<img src="${favicon(d)}" alt="" loading="lazy">`;
     a.addEventListener('click', () => go(b.url));
     box.appendChild(a);
   }
@@ -71,15 +66,7 @@ function renderBookmarks(list) {
 
 async function init() {
   const s = await api.invoke('state:get');
-  document.documentElement.dataset.theme = s.theme || 'dark';
-
-  let name = (s.username || '').trim();
-  if (/^[\w.]+$/i.test(name)) {
-    const pretty = name.charAt(0).toUpperCase() + name.slice(1).toLowerCase();
-    $('#home-greet').textContent = greeting() + ', ' + pretty + '!';
-  } else {
-    $('#home-greet').textContent = greeting() + '!';
-  }
+  applyAppearance(s.appearance);
 
   const searchUrl = s.searchUrl || 'https://www.google.com/search?q={q}';
   $('#home-search').addEventListener('submit', (e) => {
@@ -90,15 +77,13 @@ async function init() {
   });
   $('#home-q').focus();
 
-  renderLinks();
-  renderBookmarks(s.bookmarks);
+  renderLinks(s.settings.showHomeLinks !== false);
+  renderBookmarks(s.bookmarks, s.settings.showHomeBookmarks !== false);
 
   api.on('data:changed', (m) => {
-    if (m && m.bookmarks) renderBookmarks(m.bookmarks);
+    if (m && m.bookmarks) renderBookmarks(m.bookmarks, (m.settings && m.settings.showHomeBookmarks) !== false);
   });
-  api.on('theme:changed', (m) => {
-    document.documentElement.dataset.theme = m;
-  });
+  api.on('theme:changed', (m) => applyAppearance(m));
 }
 
 init();

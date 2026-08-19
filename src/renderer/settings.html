@@ -43,6 +43,47 @@
     </div>
 
     <div class="set-section">
+      <h2>Оформление</h2>
+      <div class="set-field">
+        <label for="set-accent">Акцентный цвет</label>
+        <select id="set-accent">
+          <option value="violet">Фиолетовый</option>
+          <option value="blue">Синий</option>
+          <option value="green">Зелёный</option>
+          <option value="amber">Янтарный</option>
+          <option value="rose">Розовый</option>
+          <option value="teal">Бирюзовый</option>
+        </select>
+      </div>
+      <div class="set-field">
+        <label for="set-scale">Размер интерфейса</label>
+        <select id="set-scale">
+          <option value="small">Компактный</option>
+          <option value="medium">Обычный</option>
+          <option value="large">Крупный</option>
+        </select>
+      </div>
+      <div class="set-field">
+        <label for="set-wallpaper">Фон новой вкладки</label>
+        <select id="set-wallpaper">
+          <option value="aurora">Аврора</option>
+          <option value="sunset">Закат</option>
+          <option value="ocean">Океан</option>
+          <option value="forest">Лес</option>
+          <option value="mono">Моно</option>
+        </select>
+      </div>
+      <label class="set-check">
+        <input type="checkbox" id="set-home-links">
+        <span>Быстрые ссылки на новой вкладке</span>
+      </label>
+      <label class="set-check">
+        <input type="checkbox" id="set-home-bm">
+        <span>Закладки на новой вкладке</span>
+      </label>
+    </div>
+
+    <div class="set-section">
       <h2>Вкладки</h2>
       <label class="set-check">
         <input type="checkbox" id="set-restore-tabs">
@@ -51,6 +92,18 @@
       <label class="set-check">
         <input type="checkbox" id="set-new-blank">
         <span>Новая вкладка — пустая страница</span>
+      </label>
+      <label class="set-check">
+        <input type="checkbox" id="set-close-always">
+        <span>Всегда показывать кнопку закрытия</span>
+      </label>
+      <label class="set-check">
+        <input type="checkbox" id="set-compact">
+        <span>Компактная панель</span>
+      </label>
+      <label class="set-check">
+        <input type="checkbox" id="set-confirm-close">
+        <span>Спрашивать при закрытии окна с вкладками</span>
       </label>
     </div>
 
@@ -68,6 +121,10 @@
         <input type="checkbox" id="set-thirdparty">
         <span>Блокировать сторонние cookie</span>
       </label>
+      <label class="set-check">
+        <input type="checkbox" id="set-clear-exit">
+        <span>Очищать историю при выходе</span>
+      </label>
     </div>
 
     <div class="set-section">
@@ -79,6 +136,10 @@
 
     <div class="set-section">
       <h2>Загрузки</h2>
+      <label class="set-check">
+        <input type="checkbox" id="set-dl-ask">
+        <span>Спрашивать перед загрузкой файла</span>
+      </label>
       <div class="set-field">
         <label for="set-dl-dir">Папка для файлов</label>
         <div class="row-flex">

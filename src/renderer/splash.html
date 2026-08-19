@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self'">
+  <title></title>
+  <style>
+    html, body { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; }
+    html { transition: opacity 0.9s ease; }
+    html.out { opacity: 0; }
+    body {
+      background: radial-gradient(1200px 700px at 30% 20%, #23264d 0%, #161833 45%, #0d0e18 100%);
+      display: flex; align-items: center; justify-content: center;
+    }
+    .logo {
+      position: relative;
+      width: 130px; height: 130px;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .ring {
+      position: absolute; inset: 0;
+      border-radius: 50%;
+      background: conic-gradient(from 0deg, rgba(141,149,227,0.9), rgba(141,149,227,0.08) 40%, rgba(141,149,227,0.9));
+      -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 5px), #000 calc(100% - 4px));
+      mask: radial-gradient(farthest-side, transparent calc(100% - 5px), #000 calc(100% - 4px));
+      animation: spin 2.6s linear infinite;
+    }
+    .core {
+      width: 58px; height: 58px;
+      border-radius: 18px;
+      background: radial-gradient(circle at 32% 28%, #a5adee 0%, #6f7ad6 55%, #454e9e 100%);
+      box-shadow: 0 10px 34px rgba(109, 121, 214, 0.55), inset 0 1px 2px rgba(255,255,255,0.45);
+      animation: breathe 2.6s ease-in-out infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    @keyframes breathe {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(0.9); }
+    }
+  </style>
+</head>
+<body>
+  <div class="logo">
+    <div class="ring"></div>
+    <div class="core"></div>
+  </div>
+</body>
+</html>

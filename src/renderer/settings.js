@@ -64,6 +64,8 @@ async function init() {
   const set = s.settings || {};
 
   document.documentElement.dataset.theme = s.theme || 'dark';
+  document.documentElement.dataset.accent = (s.appearance && s.appearance.accent) || 'violet';
+  document.documentElement.dataset.scale = (s.appearance && s.appearance.uiScale) || 'medium';
 
   const engines = s.searchEngines || {};
   $('#set-engine').innerHTML = Object.entries(engines)
@@ -83,15 +85,34 @@ async function init() {
   themeSel.value = set.theme || 'system';
   themeSel.addEventListener('change', (e) => api.invoke('settings:set', { theme: e.target.value }));
 
+  const accentSel = $('#set-accent');
+  accentSel.value = set.accent || 'violet';
+  accentSel.addEventListener('change', (e) => api.invoke('settings:set', { accent: e.target.value }));
+
+  const scaleSel = $('#set-scale');
+  scaleSel.value = set.uiScale || 'medium';
+  scaleSel.addEventListener('change', (e) => api.invoke('settings:set', { uiScale: e.target.value }));
+
+  const wallSel = $('#set-wallpaper');
+  wallSel.value = set.homeWallpaper || 'aurora';
+  wallSel.addEventListener('change', (e) => api.invoke('settings:set', { homeWallpaper: e.target.value }));
+
   const zoomSel = $('#set-zoom');
   zoomSel.value = String(set.zoom === undefined ? 1 : set.zoom);
   zoomSel.addEventListener('change', () => api.invoke('settings:set', { zoom: Number(zoomSel.value) }));
 
   bindCheckbox('#set-restore-tabs', 'restoreTabs').checked = set.restoreTabs !== false;
   bindCheckbox('#set-new-blank', 'newTabBlank').checked = !!set.newTabBlank;
+  bindCheckbox('#set-close-always', 'showTabCloseAlways').checked = !!set.showTabCloseAlways;
+  bindCheckbox('#set-compact', 'compactChrome').checked = !!set.compactChrome;
+  bindCheckbox('#set-confirm-close', 'confirmCloseTabs').checked = !!set.confirmCloseTabs;
+  bindCheckbox('#set-home-links', 'showHomeLinks').checked = set.showHomeLinks !== false;
+  bindCheckbox('#set-home-bm', 'showHomeBookmarks').checked = set.showHomeBookmarks !== false;
   bindCheckbox('#set-history', 'recordHistory').checked = set.recordHistory !== false;
   bindCheckbox('#set-dnt', 'doNotTrack').checked = !!set.doNotTrack;
   bindCheckbox('#set-thirdparty', 'blockThirdPartyCookies').checked = !!set.blockThirdPartyCookies;
+  bindCheckbox('#set-clear-exit', 'clearOnExit').checked = !!set.clearOnExit;
+  bindCheckbox('#set-dl-ask', 'downloadAsk').checked = !!set.downloadAsk;
 
   const dlDir = $('#set-dl-dir');
   if (set.downloadDir) dlDir.value = set.downloadDir;
@@ -126,7 +147,9 @@ async function init() {
   $('#about-line').textContent = 'Nova Browser v' + (s.version || '') + ' · движок Chromium (Electron) · данные: ' + (s.userData || '');
 
   api.on('theme:changed', (m) => {
-    document.documentElement.dataset.theme = m;
+    document.documentElement.dataset.theme = m.theme || 'dark';
+    document.documentElement.dataset.accent = m.accent || 'violet';
+    document.documentElement.dataset.scale = m.uiScale || 'medium';
   });
 
   renderPerms();
