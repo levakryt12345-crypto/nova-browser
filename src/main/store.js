@@ -7,6 +7,13 @@ const DEFAULT_SETTINGS = {
   homePage: 'https://www.google.com',
   searchEngine: 'google',
   theme: 'system',
+  restoreTabs: true,
+  recordHistory: true,
+  newTabBlank: false,
+  doNotTrack: false,
+  blockThirdPartyCookies: false,
+  zoom: 1,
+  downloadDir: null,
 };
 
 class Store {
@@ -16,8 +23,10 @@ class Store {
     this.bookmarks = this._load('bookmarks.json', []);
     this.history = this._load('history.json', []);
     this.permissions = this._load('permissions.json', {});
+    this.tabsState = this._load('tabs.json', []);
     if (!Array.isArray(this.bookmarks)) this.bookmarks = [];
     if (!Array.isArray(this.history)) this.history = [];
+    if (!Array.isArray(this.tabsState)) this.tabsState = [];
     if (typeof this.permissions !== 'object' || this.permissions === null || Array.isArray(this.permissions)) {
       this.permissions = {};
     }
@@ -52,6 +61,21 @@ class Store {
     this.settings = { ...this.getSettings(), ...partial };
     this._save('settings.json', this.settings);
     return this.settings;
+  }
+
+  resetSettings() {
+    this.settings = { ...DEFAULT_SETTINGS };
+    this._save('settings.json', this.settings);
+    return this.settings;
+  }
+
+  getTabsState() {
+    return this.tabsState;
+  }
+
+  setTabsState(list) {
+    this.tabsState = Array.isArray(list) ? list.slice(0, 20) : [];
+    this._save('tabs.json', this.tabsState);
   }
 
   getBookmarks() {

@@ -34,24 +34,76 @@
           <button data-v="dark">Тёмная</button>
         </div>
       </div>
+      <div class="form-row">
+        <label>Масштаб страниц по умолчанию</label>
+        <select id="set-zoom">
+          <option value="0.75">75%</option>
+          <option value="0.9">90%</option>
+          <option value="1">100%</option>
+          <option value="1.1">110%</option>
+          <option value="1.25">125%</option>
+          <option value="1.5">150%</option>
+          <option value="2">200%</option>
+        </select>
+      </div>
     </section>
 
     <section class="set-card">
+      <h2>Вкладки</h2>
+      <label class="set-check">
+        <input type="checkbox" id="set-restore-tabs">
+        <span><b>Восстанавливать вкладки</b><br>При запуске открывать все вкладки, которые были открыты при закрытии браузера</span>
+      </label>
+      <label class="set-check">
+        <input type="checkbox" id="set-new-blank">
+        <span><b>Пустая новая вкладка</b><br>Новая вкладка (Ctrl+T) открывает пустую страницу вместо стартовой</span>
+      </label>
+    </section>
+
+    <section class="set-card">
+      <h2>Приватность</h2>
+      <label class="set-check">
+        <input type="checkbox" id="set-history">
+        <span><b>Записывать историю</b><br>Сохранять посещённые страницы в историю</span>
+      </label>
+      <label class="set-check">
+        <input type="checkbox" id="set-dnt">
+        <span><b>Do Not Track</b><br>Отправлять сайтам заголовок «не отслеживать» (DNT: 1)</span>
+      </label>
+      <label class="set-check">
+        <input type="checkbox" id="set-thirdparty">
+        <span><b>Блокировать сторонние cookie</b><br>Не отправлять cookie сторонних сайтов при переходах между сайтами</span>
+      </label>
+      <p class="set-desc">Камера и микрофон — всегда по вашему согласию через диалог «Разрешить / Отклонить». Решения управляются в разделе «Разрешения сайтов» ниже.</p>
+    </section>
+
+    <section class="set-card">
+      <h2>Разрешения сайтов</h2>
       <div class="set-card-head">
-        <h2>Разрешения сайтов</h2>
         <button class="btn small danger" id="perm-clear-all">Сбросить все</button>
       </div>
-      <p class="set-desc">Когда сайт запрашивает камеру или микрофон, Nova показывает диалог «Разрешить / Отклонить». Если вы выбрали «Запомнить» — решение хранится здесь и применяется автоматически.</p>
       <div id="perm-list" class="perm-list"></div>
       <div id="perm-empty" class="perm-empty" hidden>Сохранённых разрешений нет.</div>
     </section>
 
     <section class="set-card">
+      <h2>Загрузки</h2>
+      <div class="form-row">
+        <label>Папка для загрузок</label>
+        <div class="row-flex">
+          <input class="panel-input" id="set-dl-dir" readonly placeholder="По умолчанию (папка «Загрузки»)">
+          <button class="btn small" id="set-dl-dir-btn">Выбрать…</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="set-card">
       <h2>О браузере</h2>
       <div class="about-line" id="about-line"></div>
-      <div class="form-row">
+      <div class="form-row row-flex">
         <button class="btn small" id="set-data-folder">Открыть папку с данными</button>
         <button class="btn small" id="set-clear-hist">Очистить историю</button>
+        <button class="btn small danger" id="set-reset">Сбросить все настройки</button>
       </div>
     </section>
   </div>

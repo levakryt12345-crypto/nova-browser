@@ -1259,3 +1259,43 @@ select {
   margin-bottom: 12px;
   word-break: break-all;
 }
+
+.set-check {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 9px 0;
+  cursor: pointer;
+  user-select: none;
+}
+
+.set-check input {
+  margin-top: 2px;
+  width: 15px;
+  height: 15px;
+  accent-color: var(--accent);
+  flex-shrink: 0;
+}
+
+.set-check b {
+  display: block;
+  font-size: 13px;
+  color: var(--text);
+  font-weight: 600;
+}
+
+.set-check span {
+  font-size: 12px;
+  color: var(--text-dim);
+  line-height: 1.45;
+}
+
+.row-flex {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.row-flex .panel-input {
+  flex: 1;
+}

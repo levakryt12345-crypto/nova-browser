@@ -31,6 +31,13 @@ const DEFAULT_SETTINGS = {
   homePage: 'https://www.google.com',
   searchEngine: 'google',
   theme: 'system',
+  restoreTabs: true,
+  recordHistory: true,
+  newTabBlank: false,
+  doNotTrack: false,
+  blockThirdPartyCookies: false,
+  zoom: 1,
+  downloadDir: null,
 };
 
 const SEARCH_ENGINES = {
@@ -162,9 +169,18 @@ function layout() {
 }
 
 function recordHistory(tab) {
+  if (!settings().recordHistory) return;
   if (!tab.url || /^(about|chrome|devtools|data|nova|file):/i.test(tab.url)) return;
   state.store.addHistory({ url: tab.url, title: tab.title });
   broadcast('data:changed', { bookmarks: state.store.getBookmarks(), history: state.store.getHistory(), settings: settings() });
+}
+
+function saveTabsState() {
+  const urls = state.order
+    .map((id) => state.tabs.get(id))
+    .filter((t) => t && !t.special && t.url && !/^(about:blank|nova:)/i.test(t.url))
+    .map((t) => t.url);
+  state.store.setTabsState(urls);
 }
 
 function updateNavState(id) {
@@ -202,6 +218,7 @@ function activateTab(id) {
 function createTab(rawUrl, opts = {}) {
   const url = normalizeUrl(rawUrl, !!opts.strict);
   if (url === SETTINGS_URL) return createSettingsTab();
+  const wantBlank = !rawUrl && !!settings().newTabBlank;
   const id = state.seq++;
   const view = new WebContentsView({
     webPreferences: {
@@ -258,12 +275,17 @@ function createTab(rawUrl, opts = {}) {
       recordHistory(tab);
     }
     tabDirty(id);
+    saveTabsState();
+    try {
+      wc.setZoomFactor(settings().zoom);
+    } catch {}
   });
   wc.on('did-navigate', (e, u) => {
     if (VERIFY) log('did-navigate ' + u);
     tab.url = u;
     recordHistory(tab);
     tabDirty(id);
+    saveTabsState();
   });
   wc.on('did-navigate-in-page', (e, u) => {
     tab.url = u;
@@ -300,7 +322,11 @@ function createTab(rawUrl, opts = {}) {
   });
 
   activateTab(id);
-  wc.loadURL(url);
+  if (wantBlank) {
+    wc.loadURL('about:blank');
+  } else {
+    wc.loadURL(url);
+  }
   if (VERIFY && state.order.length === 1) setupVerify(wc, id);
   return id;
 }
@@ -374,6 +400,7 @@ function closeTab(id) {
   state.tabs.delete(id);
   state.win.contentView.removeChildView(t.view);
   t.wc.close();
+  saveTabsState();
   if (state.activeId === id) {
     const next = state.order[Math.min(idx, state.order.length - 1)];
     if (next !== undefined) activateTab(next);
@@ -543,12 +570,45 @@ function setupIpc() {
     if (typeof partial.homePage === 'string' && partial.homePage.trim()) safe.homePage = partial.homePage.trim();
     if (SEARCH_ENGINES[partial.searchEngine]) safe.searchEngine = partial.searchEngine;
     if (['light', 'dark', 'system'].includes(partial.theme)) safe.theme = partial.theme;
+    for (const k of ['restoreTabs', 'recordHistory', 'newTabBlank', 'doNotTrack', 'blockThirdPartyCookies']) {
+      if (typeof partial[k] === 'boolean') safe[k] = partial[k];
+    }
+    if (typeof partial.zoom === 'number' && partial.zoom >= 0.5 && partial.zoom <= 2) safe.zoom = Math.round(partial.zoom * 100) / 100;
+    if (typeof partial.downloadDir === 'string' && (partial.downloadDir === '' || partial.downloadDir.trim())) {
+      safe.downloadDir = partial.downloadDir.trim();
+    }
     state.store.setSettings(safe);
+    const s = settings();
     for (const t of state.tabs.values()) {
       t.view.setBackgroundColor(resolvedTheme() === 'dark' ? '#191a1f' : '#ffffff');
+      try {
+        t.wc.setZoomFactor(s.zoom);
+      } catch {}
     }
     pushData();
     pushTheme();
+  });
+
+  ipcMain.handle('settings:reset', () => {
+    state.store.resetSettings();
+    const s = settings();
+    for (const t of state.tabs.values()) {
+      t.view.setBackgroundColor(resolvedTheme() === 'dark' ? '#191a1f' : '#ffffff');
+      try {
+        t.wc.setZoomFactor(s.zoom);
+      } catch {}
+    }
+    pushData();
+    pushTheme();
+  });
+
+  ipcMain.handle('app:choose-download-dir', async () => {
+    const res = await dialog.showOpenDialog(state.win, {
+      title: 'Папка для загрузок',
+      properties: ['openDirectory', 'createDirectory'],
+    });
+    if (res.canceled || !res.filePaths.length) return null;
+    return res.filePaths[0];
   });
 
   ipcMain.handle('downloads:action', (e, { id, action } = {}) => {
@@ -838,6 +898,7 @@ function createWindow() {
   win.on('enter-full-screen', () => win.webContents.send('win:maximized', true));
   win.on('leave-full-screen', () => win.webContents.send('win:maximized', false));
   win.on('closed', () => {
+    saveTabsState();
     state.win = null;
     app.quit();
   });
@@ -868,7 +929,17 @@ function createWindow() {
   win.once('ready-to-show', () => {
     if (VERIFY) log('ready-to-show fired');
     win.show();
-    createTab(VERIFY ? VERIFY_URL : settings().homePage);
+    if (VERIFY) {
+      createTab(VERIFY_URL);
+      return;
+    }
+    const saved = state.store.getTabsState();
+    if (settings().restoreTabs && saved.length) {
+      if (VERIFY) log('restoring tabs: ' + saved.length);
+      for (const u of saved) createTab(typeof u === 'string' ? u : (u && u.url) || '');
+    } else {
+      createTab(settings().homePage);
+    }
   });
 }
 
@@ -928,11 +999,26 @@ if (!gotLock) {
       }
     });
 
+    session.defaultSession.webRequest.onBeforeSendHeaders((details, callback) => {
+      const headers = details.requestHeaders || {};
+      const s = settings();
+      if (s.doNotTrack) headers['DNT'] = '1';
+      if (s.blockThirdPartyCookies && details.referrer && headers.Cookie) {
+        try {
+          const refOrigin = new URL(details.referrer).hostname;
+          const reqHost = new URL(details.url).hostname;
+          if (refOrigin !== reqHost) delete headers.Cookie;
+        } catch {}
+      }
+      callback({ requestHeaders: headers });
+    });
+
     if (VERIFY) log('step: will-download handler');
     session.defaultSession.on('will-download', (event, item) => {
       const id = ++state.dlSeq;
       let filename = path.basename(item.getFilename());
-      let filePath = path.join(app.getPath('downloads'), filename);
+      const dlDir = settings().downloadDir || app.getPath('downloads');
+      let filePath = path.join(dlDir, filename);
       const parsed = path.parse(filename);
       let n = 1;
       while (fs.existsSync(filePath)) {

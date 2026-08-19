@@ -13,10 +13,6 @@ function esc(s) {
   return String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 }
 
-function domainHost(d) {
-  return d;
-}
-
 function renderPerms() {
   const list = $('#perm-list');
   const empty = $('#perm-empty');
@@ -30,7 +26,7 @@ function renderPerms() {
     const kinds = Object.keys(rec);
     row.innerHTML = `
       <div class="perm-row-main">
-        <div class="perm-row-title">${esc(domainHost(domain))}</div>
+        <div class="perm-row-title">${esc(domain)}</div>
         <div class="perm-row-sub">${kinds.map((k) => esc(PERM_NAMES[k] || k)).join(', ') || '—'}</div>
       </div>
       <button class="btn small perm-state" data-domain="${esc(domain)}">${kinds.some((k) => rec[k] === 'allow') ? 'Разрешено' : 'Заблокировано'}</button>
@@ -56,19 +52,26 @@ function renderPerms() {
   });
 }
 
+function bindCheckbox(id, key) {
+  const el = $(id);
+  el.addEventListener('change', () => api.invoke('settings:set', { [key]: el.checked }));
+  return el;
+}
+
 async function init() {
   const s = await api.invoke('state:get');
   permissions = (await api.invoke('permission:get-all')) || {};
+  const set = s.settings || {};
 
   document.documentElement.dataset.theme = s.theme || 'dark';
 
   const engines = s.searchEngines || {};
   $('#set-engine').innerHTML = Object.entries(engines)
-    .map(([k, v]) => `<option value="${k}" ${(s.settings.searchEngine || 'google') === k ? 'selected' : ''}>${esc(v.name)}</option>`)
+    .map(([k, v]) => `<option value="${k}" ${(set.searchEngine || 'google') === k ? 'selected' : ''}>${esc(v.name)}</option>`)
     .join('');
 
   const home = $('#set-home');
-  home.value = s.settings.homePage || '';
+  home.value = set.homePage || '';
   home.addEventListener('change', () => {
     const v = home.value.trim();
     if (v) api.invoke('settings:set', { homePage: v });
@@ -80,7 +83,7 @@ async function init() {
   const setTheme = (t) => {
     themeBtns.forEach((b) => b.classList.toggle('on', b.dataset.v === t));
   };
-  setTheme(s.settings.theme || 'system');
+  setTheme(set.theme || 'system');
   themeBtns.forEach((b) =>
     b.addEventListener('click', () => {
       const t = b.dataset.v;
@@ -88,6 +91,26 @@ async function init() {
       api.invoke('settings:set', { theme: t });
     })
   );
+
+  const zoomSel = $('#set-zoom');
+  zoomSel.value = String(set.zoom === undefined ? 1 : set.zoom);
+  zoomSel.addEventListener('change', () => api.invoke('settings:set', { zoom: Number(zoomSel.value) }));
+
+  bindCheckbox('#set-restore-tabs', 'restoreTabs').checked = set.restoreTabs !== false;
+  bindCheckbox('#set-new-blank', 'newTabBlank').checked = !!set.newTabBlank;
+  bindCheckbox('#set-history', 'recordHistory').checked = set.recordHistory !== false;
+  bindCheckbox('#set-dnt', 'doNotTrack').checked = !!set.doNotTrack;
+  bindCheckbox('#set-thirdparty', 'blockThirdPartyCookies').checked = !!set.blockThirdPartyCookies;
+
+  const dlDir = $('#set-dl-dir');
+  if (set.downloadDir) dlDir.value = set.downloadDir;
+  $('#set-dl-dir-btn').addEventListener('click', async () => {
+    const dir = await api.invoke('app:choose-download-dir');
+    if (dir) {
+      dlDir.value = dir;
+      await api.invoke('settings:set', { downloadDir: dir });
+    }
+  });
 
   $('#perm-clear-all').addEventListener('click', async () => {
     permissions = (await api.invoke('permission:clear-all')) || {};
@@ -98,6 +121,11 @@ async function init() {
   $('#set-clear-hist').addEventListener('click', async () => {
     await api.invoke('history:clear');
     alert('История очищена');
+  });
+  $('#set-reset').addEventListener('click', async () => {
+    if (!confirm('Сбросить все настройки к значениям по умолчанию?')) return;
+    await api.invoke('settings:reset');
+    location.reload();
   });
 
   $('#about-line').textContent = 'Nova Browser v' + (s.version || '') + ' · движок Chromium (Electron) · данные: ' + (s.userData || '');
