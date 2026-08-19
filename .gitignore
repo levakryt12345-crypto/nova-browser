@@ -13,3 +13,6 @@ Thumbs.db
 
 /build-log*.txt
 /build-pid.txt
+
+/verify-log.txt
+/settings-*.png
