@@ -1,0 +1,15 @@
+node_modules/
+build/
+dist/
+crash.log
+verify-*.json
+verify-*.png
+/verify.png
+/final-check.png
+/fix-check.png
+/ui-check.png
+*.log
+Thumbs.db
+
+/build-log*.txt
+/build-pid.txt

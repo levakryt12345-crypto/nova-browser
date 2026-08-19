@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="#141519">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:paddingTop="10dp"
+        android:paddingBottom="10dp"
+        android:paddingStart="6dp"
+        android:paddingEnd="6dp"
+        android:background="#141519">
+
+        <ImageButton
+            android:id="@+id/btn_back"
+            android:layout_width="44dp"
+            android:layout_height="44dp"
+            android:src="@drawable/ic_back"
+            android:background="?android:attr/selectableItemBackgroundBorderless"
+            android:contentDescription="Назад" />
+
+        <ImageButton
+            android:id="@+id/btn_fwd"
+            android:layout_width="44dp"
+            android:layout_height="44dp"
+            android:src="@drawable/ic_fwd"
+            android:background="?android:attr/selectableItemBackgroundBorderless"
+            android:contentDescription="Вперёд" />
+
+        <EditText
+            android:id="@+id/addr"
+            android:layout_width="0dp"
+            android:layout_height="42dp"
+            android:layout_weight="1"
+            android:hint="Поиск или адрес"
+            android:inputType="textUri"
+            android:imeOptions="actionGo"
+            android:singleLine="true"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp"
+            android:background="@drawable/addr_bg"
+            android:textColor="#E9E9EE"
+            android:textColorHint="#6B6F7C"
+            android:textSize="14sp" />
+
+        <ImageButton
+            android:id="@+id/btn_refresh"
+            android:layout_width="44dp"
+            android:layout_height="44dp"
+            android:src="@drawable/ic_refresh"
+            android:background="?android:attr/selectableItemBackgroundBorderless"
+            android:contentDescription="Обновить" />
+
+        <ImageButton
+            android:id="@+id/btn_home"
+            android:layout_width="44dp"
+            android:layout_height="44dp"
+            android:src="@drawable/ic_home"
+            android:background="?android:attr/selectableItemBackgroundBorderless"
+            android:contentDescription="Домой" />
+    </LinearLayout>
+
+    <WebView
+        android:id="@+id/web"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1" />
+</LinearLayout>

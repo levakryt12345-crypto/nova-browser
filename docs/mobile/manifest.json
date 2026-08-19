@@ -1,0 +1,26 @@
+{
+  "name": "Nova Mobile",
+  "short_name": "Nova Mobile",
+  "description": "Мобильная версия браузера Nova Browser",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#141519",
+  "theme_color": "#141519",
+  "lang": "ru",
+  "icons": [
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}

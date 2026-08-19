@@ -1,0 +1,45 @@
+{
+  "name": "nova-browser",
+  "version": "1.0.0",
+  "description": "Nova Browser — minimal Chromium-based desktop browser built with Electron",
+  "main": "src/main/main.js",
+  "author": "Nova Browser",
+  "license": "MIT",
+  "scripts": {
+    "start": "electron .",
+    "icon": "node scripts/generate-icon.js",
+    "dist": "electron-builder --win portable",
+    "verify": "electron . --nova-verify-url=https://example.com --nova-verify-out=verify.png"
+  },
+  "devDependencies": {
+    "electron": "43.4.1",
+    "electron-builder": "26.15.3"
+  },
+  "build": {
+    "appId": "com.novabrowser.app",
+    "productName": "Nova Browser",
+    "copyright": "Copyright (c) 2026 Nova Browser",
+    "directories": {
+      "output": "build",
+      "buildResources": "assets"
+    },
+    "files": [
+      "src/**/*",
+      "package.json"
+    ],
+    "win": {
+      "icon": "assets/icon.ico",
+      "target": [
+        {
+          "target": "portable",
+          "arch": [
+            "x64"
+          ]
+        }
+      ]
+    },
+    "portable": {
+      "artifactName": "NovaBrowser-${version}-portable.${ext}"
+    }
+  }
+}

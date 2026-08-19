@@ -1,0 +1,279 @@
+<!doctype html>
+<html lang="ru" data-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Nova Browser — минималистичный Chromium-браузер для Windows. Документация, установка на ПК и телефон, сборка из исходников.">
+  <title>Nova Browser — документация</title>
+  <link rel="icon" href="icon.png">
+  <link rel="stylesheet" href="style.css">
+  <script>
+    (function () {
+      var t = localStorage.getItem('nova-theme');
+      if (t === 'light' || t === 'dark') document.documentElement.dataset.theme = t;
+    })();
+  </script>
+</head>
+<body>
+  <header class="nav">
+    <div class="nav-inner">
+      <a class="brand" href="#top">
+        <img src="icon.png" alt="">
+        <span>Nova <b>Browser</b></span>
+      </a>
+      <nav class="links">
+        <a href="#features">Возможности</a>
+        <a href="#install-pc">Установка на ПК</a>
+        <a href="#install-phone">Установка на телефон</a>
+        <a href="#build">Сборка из исходников</a>
+        <a href="#security">Безопасность</a>
+        <a href="#faq">FAQ</a>
+      </nav>
+      <div class="nav-right">
+        <a class="btn btn-accent" href="downloads/NovaBrowser-1.0.0-portable.exe" download>Скачать</a>
+        <button id="theme-btn" class="icon-btn" title="Переключить тему" aria-label="Переключить тему"></button>
+      </div>
+    </div>
+  </header>
+
+  <main id="top">
+    <section class="hero">
+      <div class="hero-inner">
+        <div class="hero-badge">v1.0.0 · Windows 10/11</div>
+        <h1>Браузер, который <span class="grad">не мешает</span></h1>
+        <p class="lead">
+          Nova Browser — минималистичный браузер на движке Chromium (Electron).
+          Быстрые вкладки, мягкий интерфейс, приватность по умолчанию.
+          Без аккаунтов, без облака, без лишнего.
+        </p>
+        <div class="hero-actions">
+          <a class="btn btn-accent btn-lg" href="downloads/NovaBrowser-1.0.0-portable.exe" download>⬇ Скачать для Windows</a>
+          <a class="btn btn-ghost btn-lg" href="downloads/NovaMobile-1.0.0.zip" download>📱 Скачать для телефона</a>
+        </div>
+        <div class="hero-meta">
+          <span>≈ 93 МБ</span><span>·</span><span>Портативный exe</span><span>·</span><span>Без установки</span><span>·</span><span>Открытый исходный код</span>
+        </div>
+        <div class="hero-share">
+          Ссылка на этот сайт: <code>https://nexchat-user.github.io/nova-browser/</code>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="features">
+      <div class="section-head">
+        <h2>Возможности</h2>
+        <p>Всё необходимое — и ничего лишнего.</p>
+      </div>
+      <div class="cards">
+        <div class="card">
+          <h3>Реальные вкладки</h3>
+          <p>Каждая вкладка — полноценный процесс рендеринга. Быстрое переключение (Ctrl+1…9), закрытие средней кнопкой мыши, перетаскивание.</p>
+        </div>
+        <div class="card">
+          <h3>Закладки и история</h3>
+          <p>Стар звезда — и страница в закладках. История с поиском и очисткой. Всё хранится локально, никуда не отправляется.</p>
+        </div>
+        <div class="card">
+          <h3>Загрузки</h3>
+          <p>Пауза, отмена, открытие папки — из панели загрузок (Ctrl+J). Автоматическое переименование при совпадении имён.</p>
+        </div>
+        <div class="card">
+          <h3>Темы</h3>
+          <p>Тёмная, светлая и системная. Мягкие приглушённые цвета, режим для глаз. Переключается в настройках (Ctrl+,).</p>
+        </div>
+        <div class="card">
+          <h3>Приватность</h3>
+          <p>Никакой телеметрии. Никаких аккаунтов. Запросы на камеру, микрофон и геолокацию блокируются по умолчанию.</p>
+        </div>
+        <div class="card">
+          <h3>Безопасность</h3>
+          <p>Валидация SSL, изоляция сайтов (sandbox), белый список IPC-каналов, строгая CSP. Полный аудит — в разделе ниже.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="install-pc">
+      <div class="section-head">
+        <h2>Установка на ПК (Windows 10/11)</h2>
+        <p>Два способа: портативная версия (рекомендуется) или сборка из исходников.</p>
+      </div>
+      <div class="steps">
+        <div class="step">
+          <div class="step-num">1</div>
+          <div>
+            <h3>Скачайте Nova Browser</h3>
+            <p>Нажмите <a href="downloads/NovaBrowser-1.0.0-portable.exe" download>«Скачать для Windows»</a> — загрузится файл <code>NovaBrowser-1.0.0-portable.exe</code> (≈ 93 МБ). Также он доступен в разделе <em>Releases</em> на GitHub.</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">2</div>
+          <div>
+            <h3>Запустите</h3>
+            <p>Двойной клик по exe — браузер открывается сразу. Ничего устанавливать не нужно: приложение работает «на лету» и не требует прав администратора.</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">3</div>
+          <div>
+            <h3>Закрепите ярлык</h3>
+            <p>Перетащите exe на рабочий стол или в панель задач для быстрого доступа. Данные (закладки, история, настройки) хранятся в <code>%APPDATA%\Nova Browser</code> и сохраняются между запусками.</p>
+          </div>
+        </div>
+      </div>
+      <div class="note">
+        <b>Требования:</b> Windows 10 (1809+) или Windows 11, 64-бит (x64), 1 ГБ ОЗУ свободно, 300 МБ на диске. Интернет нужен только для просмотра сайтов — сам браузер работает офлайн.
+      </div>
+    </section>
+
+    <section class="section" id="install-phone">
+      <div class="section-head">
+        <h2>Установка на телефон</h2>
+        <p>Отдельная мобильная версия Nova Mobile — скачивается и устанавливается как приложение.</p>
+      </div>
+      <div class="cards two">
+        <div class="card">
+          <div class="card-tag">Android · iOS · скачивается</div>
+          <h3>Nova Mobile — отдельная версия</h3>
+          <p>Лёгкий мобильный браузер: адресная строка, быстрые переходы, офлайн-режим. Скачивается одним файлом и устанавливается на главный экран как приложение.</p>
+          <a class="btn btn-accent" href="downloads/NovaMobile-1.0.0.zip" download>⬇ Скачать Nova Mobile (8 КБ)</a>
+          <ol class="mini-list">
+            <li>Нажмите «Скачать Nova Mobile» — на телефон загрузится файл <code>NovaMobile-1.0.0.zip</code>.</li>
+            <li>Распакуйте архив и откройте <code>index.html</code> в Chrome (Android) или Safari (iPhone).</li>
+            <li>Нажмите «Установить» в плашке — или в меню браузера <em>«Добавить на главный экран»</em>.</li>
+            <li>Иконка Nova появится на главном экране — приложение запускается как нативное.</li>
+          </ol>
+          <div class="note">Онлайн-версия: <a href="mobile/index.html">Nova Mobile в браузере</a> — открывается сразу, без скачивания. Сайты, запрещающие встроенный просмотр (Google, YouTube), Nova Mobile откроет отдельной вкладкой.</div>
+          <div class="warn">APK для Android (один файл, без распаковки) соберётся автоматически на GitHub Actions при публикации проекта — следите за разделом <em>Releases</em>.</div>
+        </div>
+        <div class="card">
+          <div class="card-tag">Android · полная версия</div>
+          <h3>Полный Nova Browser через Winlator</h3>
+          <p>Хотите на телефоне именно полную версию браузера с вкладками и закладками? Winlator запускает Windows-приложения на Android.</p>
+          <ol class="mini-list">
+            <li>Установите <a href="https://winlator.org" target="_blank" rel="noopener">Winlator</a> из официального источника.</li>
+            <li>Скопируйте <a href="downloads/NovaBrowser-1.0.0-portable.exe" download>NovaBrowser-1.0.0-portable.exe</a> в память телефона.</li>
+            <li>В Winlator создайте пресет (4+ ГБ ОЗУ, режим совместимости Windows 7).</li>
+            <li>Запустите exe внутри Winlator — полноценный браузер на телефоне.</li>
+          </ol>
+          <div class="warn">Эмуляция требует мощного телефона: Snapdragon 700-й серии и выше, 6+ ГБ ОЗУ.</div>
+        </div>
+      </div>
+      <div class="note">
+        <b>iOS:</b> Nova Mobile устанавливается на iPhone через Safari — «Поделиться» → «На главный экран». Полная версия браузера — через удалённый доступ к ПК (AnyDesk/Parsec).
+      </div>
+    </section>
+
+    <section class="section" id="build">
+      <div class="section-head">
+        <h2>Сборка из исходников</h2>
+        <p>Вам понадобятся Node.js 20+ и npm. Полный процесс — около 5 минут.</p>
+      </div>
+      <div class="codeblock">
+<pre>git clone https://github.com/ВАШ-ЛОГИН/nova-browser.git
+cd nova-browser
+npm install
+
+# Запуск в режиме разработчика
+npm start
+
+# Сборка портативного exe (build/NovaBrowser-1.0.0-portable.exe)
+npm run dist
+
+# Автопроверка сборки (открывает страницу и делает скриншот)
+npm run verify</pre>
+      </div>
+      <div class="note">
+        <b>Структура проекта:</b> <code>src/main</code> — главный процесс (окна, вкладки, IPC), <code>src/preload</code> — безопасный мост, <code>src/renderer</code> — интерфейс (HTML/CSS/JS), <code>scripts</code> — генератор иконки, <code>assets</code> — иконки.
+      </div>
+    </section>
+
+    <section class="section" id="security">
+      <div class="section-head">
+        <h2>Безопасность</h2>
+        <p>Результаты аудита перед публикацией. Все уязвимости закрыты.</p>
+      </div>
+      <div class="cards two">
+        <div class="card">
+          <h3>✅ Что проверено</h3>
+          <ul class="check-list">
+            <li><code>contextIsolation: true</code> — сайты изолированы от главного процесса</li>
+            <li><code>nodeIntegration: false</code> — сайты не имеют доступа к системе</li>
+            <li><code>sandbox: true</code> — песочница во всех окнах</li>
+            <li>SSL-сертификаты проверяются (нет <code>ignore-certificate-errors</code>)</li>
+            <li>Запросы камеры/микрофона/геолокации/уведомлений — заблокированы</li>
+            <li>Белый список IPC-каналов в preload</li>
+            <li>Запрещены <code>file:</code>/<code>data:</code>/<code>blob:</code> из адресной строки</li>
+            <li>UI-окна не могут быть уведены на сторонние страницы</li>
+            <li><code>npm audit</code>: 0 уязвимостей (Electron 43.4.1)</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>📦 Зависимости</h3>
+          <ul class="check-list">
+            <li><code>electron</code> 43.4.1 — актуальная стабильная версия</li>
+            <li><code>electron-builder</code> 26.15.3 — сборка exe</li>
+            <li>Рантайм-зависимостей ноль — поверхность атаки минимальна</li>
+          </ul>
+          <div class="note">DevTools в собранной версии скрыты и включаются только флагом <code>--nova-devtools</code> для разработчиков.</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="faq">
+      <div class="section-head">
+        <h2>FAQ</h2>
+      </div>
+      <details class="faq">
+        <summary>Nova Browser бесплатный?</summary>
+        <p>Да, полностью. Проект с открытым исходным кодом (лицензия MIT).</p>
+      </details>
+      <details class="faq">
+        <summary>Куда сохраняются закладки и история?</summary>
+        <p>Локально, в <code>%APPDATA%\Nova Browser</code> (settings.json, bookmarks.json, history.json). Ничего не отправляется на серверы.</p>
+      </details>
+      <details class="faq">
+        <summary>Почему Windows SmartScreen предупреждает при запуске?</summary>
+        <p>Приложение пока не подписано цифровым сертификатом. Нажмите «Подробнее» → «Выполнить в любом случае». Подпись кода появится в следующем релизе.</p>
+      </details>
+      <details class="faq">
+        <summary>Будет ли мобильная версия?</summary>
+        <p>Уже есть: <a href="downloads/NovaMobile-1.0.0.zip" download>Nova Mobile</a> — отдельная мобильная версия для Android и iOS, скачивается и устанавливается на главный экран как приложение. Нативный APK для Android собирается автоматически на GitHub Actions. Полную версию можно запустить на Android через Winlator.</p>
+      </details>
+      <details class="faq">
+        <summary>Как сообщить об ошибке или предложить фичу?</summary>
+        <p>Откройте issue в репозитории GitHub — с описанием шагов воспроизведения, версией Windows и скриншотом, если можно.</p>
+      </details>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+      <div class="brand">
+        <img src="icon.png" alt="">
+        <span>Nova <b>Browser</b></span>
+      </div>
+      <p>Минималистичный браузер на Chromium · Windows · MIT</p>
+      <p class="muted">© 2026 Nova Browser · <a href="https://github.com" target="_blank" rel="noopener">GitHub</a> · Сайт: <code>https://nexchat-user.github.io/nova-browser/</code></p>
+    </div>
+  </footer>
+
+  <script>
+    (function () {
+      var btn = document.getElementById('theme-btn');
+      var label = { dark: '☀️', light: '🌙' };
+      function sync() {
+        var t = document.documentElement.dataset.theme === 'light' ? 'light' : 'dark';
+        btn.textContent = label[t];
+      }
+      btn.addEventListener('click', function () {
+        var cur = document.documentElement.dataset.theme;
+        var next = cur === 'light' ? 'dark' : 'light';
+        document.documentElement.dataset.theme = next;
+        localStorage.setItem('nova-theme', next);
+        sync();
+      });
+      sync();
+    })();
+  </script>
+</body>
+</html>
