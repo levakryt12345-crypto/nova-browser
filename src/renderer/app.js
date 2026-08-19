@@ -172,7 +172,6 @@ function initMain() {
     bookmarks: '#btn-bookmarks',
     history: '#btn-history',
     downloads: '#btn-downloads',
-    settings: '#btn-settings',
     profile: '#btn-profile',
   };
   for (const [type, sel] of Object.entries(popoverAnchors)) {
@@ -181,6 +180,10 @@ function initMain() {
       api.invoke('popover:show', { type, anchor: { x: r.left, y: r.bottom } });
     });
   }
+
+  $('#btn-settings').addEventListener('click', () => {
+    api.invoke('tab:go', 'nova://settings');
+  });
 
   api.on('tabs:changed', (d) => {
     store.tabs = d.tabs || [];

@@ -410,6 +410,11 @@ function navigateTo(url) {
   if (!t) return;
   const u = normalizeUrl(url, true);
   if (u === SETTINGS_URL) {
+    const existing = state.order.map((id) => state.tabs.get(id)).find((x) => x && x.special === 'settings');
+    if (existing) {
+      activateTab(existing.id);
+      return;
+    }
     if (t.special === 'settings') {
       t.wc.loadFile(SETTINGS_HTML);
     } else {
@@ -720,7 +725,7 @@ function buildMenu() {
         { label: 'Закладки', accelerator: 'CmdOrCtrl+B', click: () => popoverShow('bookmarks', { x: 320, y: CHROME_HEIGHT }) },
         { label: 'История', accelerator: 'CmdOrCtrl+H', click: () => popoverShow('history', { x: 260, y: CHROME_HEIGHT }) },
         { label: 'Загрузки', accelerator: 'CmdOrCtrl+J', click: () => popoverShow('downloads', { x: 200, y: CHROME_HEIGHT }) },
-        { label: 'Настройки', accelerator: 'CmdOrCtrl+,', click: () => popoverShow('settings', { x: 140, y: CHROME_HEIGHT }) },
+        { label: 'Настройки', accelerator: 'CmdOrCtrl+,', click: () => navigateTo(SETTINGS_URL) },
         { type: 'separator' },
         { label: 'Добавить в закладки', accelerator: 'CmdOrCtrl+D', click: () => ipcBookmarkActive() },
         { label: 'Очистить историю', accelerator: 'CmdOrCtrl+Shift+Delete', click: () => { state.store.clearHistory(); pushData(); } },
