@@ -109,6 +109,10 @@ async function init() {
   });
 
   $('#set-data-folder').addEventListener('click', () => api.invoke('app:open-data-folder'));
+  $('#set-default-browser').addEventListener('click', async () => {
+    await api.invoke('browser:register-default');
+    alert('Открыты настройки Windows. Найдите Nova Browser в списке приложений и нажмите «Установить по умолчанию».');
+  });
   $('#set-clear-hist').addEventListener('click', async () => {
     await api.invoke('history:clear');
     alert('История очищена');

@@ -16,6 +16,7 @@ const INVOKE_CHANNELS = new Set([
   'settings:set',
   'settings:reset',
   'app:choose-download-dir',
+  'browser:register-default',
   'downloads:action',
   'downloads:clear',
   'win:minimize',

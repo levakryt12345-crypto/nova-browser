@@ -15,20 +15,24 @@ const {
 } = require('electron');
 const path = require('path');
 const fs = require('fs');
+const os = require('os');
 const Store = require('./store');
+const { registerBrowser } = require('./register-browser');
 
 const PROJECT_ROOT = path.join(__dirname, '..', '..');
 const INDEX_HTML = path.join(__dirname, '..', 'renderer', 'index.html');
 const PRELOAD = path.join(__dirname, '..', 'preload', 'preload.js');
 const SETTINGS_HTML = path.join(__dirname, '..', 'renderer', 'settings.html');
+const HOME_HTML = path.join(__dirname, '..', 'renderer', 'home.html');
 const ICON_PNG = path.join(PROJECT_ROOT, 'assets', 'icon.png');
 const AVATAR_PNG = path.join(PROJECT_ROOT, 'assets', 'avatar.png');
 
 const SETTINGS_URL = 'nova://settings';
+const HOME_URL = 'nova://home';
 
 const CHROME_HEIGHT = 88;
 const DEFAULT_SETTINGS = {
-  homePage: 'https://www.google.com',
+  homePage: 'nova://home',
   searchEngine: 'google',
   theme: 'system',
   restoreTabs: true,
@@ -68,6 +72,13 @@ const VERIFY_URL = argValue('--nova-verify-url') || 'https://example.com';
 const VERIFY_OUT = argValue('--nova-verify-out')
   ? path.resolve(argValue('--nova-verify-out'))
   : path.join(app.getPath('userData'), 'verify.png');
+
+function argUrlFromArgs(args) {
+  for (const a of args) {
+    if (/^https?:\/\//i.test(a)) return a;
+  }
+  return null;
+}
 
 const state = {
   win: null,
@@ -208,9 +219,24 @@ function activateTab(id) {
     const ot = state.tabs.get(oid);
     if (!ot) continue;
     state.win.contentView.removeChildView(ot.view);
+    try {
+      ot.wc.setBackgroundThrottling(true);
+    } catch {}
   }
   state.win.contentView.addChildView(t.view);
+  try {
+    t.wc.setBackgroundThrottling(false);
+  } catch {}
   layout();
+  if (t.pendingUrl) {
+    const u = t.pendingUrl;
+    t.pendingUrl = null;
+    if (u === HOME_URL) {
+      createHomeTab(t);
+    } else {
+      t.wc.loadURL(u);
+    }
+  }
   t.wc.focus();
   pushTabs();
 }
@@ -218,6 +244,7 @@ function activateTab(id) {
 function createTab(rawUrl, opts = {}) {
   const url = normalizeUrl(rawUrl, !!opts.strict);
   if (url === SETTINGS_URL) return createSettingsTab();
+  if (url === HOME_URL) return createHomeTab();
   const wantBlank = !rawUrl && !!settings().newTabBlank;
   const id = state.seq++;
   const view = new WebContentsView({
@@ -242,6 +269,7 @@ function createTab(rawUrl, opts = {}) {
     canBack: false,
     canForward: false,
     loading: true,
+    pendingUrl: opts.defer ? url : null,
   };
   state.tabs.set(id, tab);
   state.order.push(id);
@@ -321,12 +349,80 @@ function createTab(rawUrl, opts = {}) {
     menu.popup();
   });
 
-  activateTab(id);
+  if (!opts.silent) activateTab(id);
+  if (opts.defer) return id;
   if (wantBlank) {
     wc.loadURL('about:blank');
   } else {
     wc.loadURL(url);
   }
+  if (VERIFY && state.order.length === 1) setupVerify(wc, id);
+  return id;
+}
+
+function createHomeTab(existing) {
+  if (existing) {
+    existing.special = 'home';
+    existing.title = 'Новая вкладка';
+    existing.url = HOME_URL;
+    existing.wc.loadFile(HOME_HTML);
+    tabDirty(existing.id);
+    return existing.id;
+  }
+  const id = state.seq++;
+  const view = new WebContentsView({
+    webPreferences: {
+      preload: PRELOAD,
+      sandbox: true,
+      contextIsolation: true,
+      nodeIntegration: false,
+      spellcheck: false,
+      backgroundThrottling: true,
+    },
+  });
+  const wc = view.webContents;
+  view.setBackgroundColor(resolvedTheme() === 'dark' ? '#191a1f' : '#ffffff');
+
+  const tab = {
+    id,
+    view,
+    wc,
+    special: 'home',
+    title: 'Новая вкладка',
+    url: HOME_URL,
+    favicon: null,
+    canBack: false,
+    canForward: false,
+    loading: true,
+  };
+  state.tabs.set(id, tab);
+  state.order.push(id);
+  state.win.contentView.addChildView(view);
+
+  wc.setWindowOpenHandler(({ url: u }) => {
+    createTab(u);
+    return { action: 'deny' };
+  });
+  wc.on('page-title-updated', (e, title) => {
+    tab.title = title || 'Новая вкладка';
+    tabDirty(id);
+  });
+  wc.on('did-start-loading', () => {
+    tab.loading = true;
+    tabDirty(id);
+  });
+  wc.on('did-stop-loading', () => {
+    tab.loading = false;
+    tab.url = wc.getURL() === 'file:///' + HOME_HTML.replace(/\\/g, '/') ? HOME_URL : wc.getURL();
+    tabDirty(id);
+  });
+  wc.on('did-navigate', (e, u) => {
+    if (u && u.startsWith('file:') && u.endsWith('home.html')) tab.url = HOME_URL;
+    tabDirty(id);
+  });
+
+  activateTab(id);
+  wc.loadFile(HOME_HTML);
   if (VERIFY && state.order.length === 1) setupVerify(wc, id);
   return id;
 }
@@ -412,6 +508,7 @@ function normalizeUrl(input, strict = false) {
   const s = (input || '').trim();
   if (!s) return settings().homePage;
   if (/^nova:(\/\/)?settings$/i.test(s)) return SETTINGS_URL;
+  if (/^nova:(\/\/)?home$/i.test(s)) return HOME_URL;
   if (strict && (/^localhost(:\d+)?([/?#][^\s]*)?$/i.test(s) || /^\d{1,3}(\.\d{1,3}){3}(:\d+)?([/?#][^\s]*)?$/.test(s))) return 'https://' + s;
   const m = /^([a-z][a-z0-9+.-]*):/i.exec(s);
   if (m) {
@@ -446,6 +543,19 @@ function navigateTo(url) {
       t.wc.loadFile(SETTINGS_HTML);
     } else {
       createSettingsTab();
+    }
+    return;
+  }
+  if (u === HOME_URL) {
+    const existing = state.order.map((id) => state.tabs.get(id)).find((x) => x && x.special === 'home');
+    if (existing) {
+      activateTab(existing.id);
+      return;
+    }
+    if (t.special === 'home') {
+      t.wc.loadFile(HOME_HTML);
+    } else {
+      createHomeTab();
     }
     return;
   }
@@ -502,6 +612,14 @@ function snapshot() {
     theme: resolvedTheme(),
     version: app.getVersion(),
     searchEngines: SEARCH_ENGINES,
+    searchUrl: (SEARCH_ENGINES[settings().searchEngine] || SEARCH_ENGINES.google).url,
+    username: (() => {
+      try {
+        return os.userInfo().username || '';
+      } catch {
+        return '';
+      }
+    })(),
     userData: app.getPath('userData'),
     isVerify: VERIFY,
   };
@@ -639,6 +757,12 @@ function setupIpc() {
   ipcMain.handle('popover:hide', () => popoverHide());
 
   ipcMain.handle('app:open-data-folder', () => shell.openPath(app.getPath('userData')));
+
+  ipcMain.handle('browser:register-default', async () => {
+    const ok = await registerBrowser();
+    shell.openExternal('ms-settings:defaultapps');
+    return ok;
+  });
 
   ipcMain.handle('app:open-downloads-folder', () => shell.openPath(app.getPath('downloads')));
 
@@ -933,10 +1057,19 @@ function createWindow() {
       createTab(VERIFY_URL);
       return;
     }
+    const extUrl = argUrlFromArgs(process.argv);
     const saved = state.store.getTabsState();
+    if (extUrl) {
+      createTab(extUrl);
+      return;
+    }
     if (settings().restoreTabs && saved.length) {
       if (VERIFY) log('restoring tabs: ' + saved.length);
-      for (const u of saved) createTab(typeof u === 'string' ? u : (u && u.url) || '');
+      for (const u of saved) {
+        createTab(typeof u === 'string' ? u : (u && u.url) || '', { silent: true, defer: true });
+      }
+      const last = state.order[state.order.length - 1];
+      if (last !== undefined) activateTab(last);
     } else {
       createTab(settings().homePage);
     }
@@ -944,23 +1077,27 @@ function createWindow() {
 }
 
 const gotLock = app.requestSingleInstanceLock();
-app.commandLine.appendSwitch('disable-gpu-compositing');
-app.commandLine.appendSwitch('use-angle', 'swiftshader');
-app.disableHardwareAcceleration();
 if (!gotLock) {
   app.quit();
 } else {
-  app.on('second-instance', () => {
+  app.on('second-instance', (event, commandLine) => {
+    const u = argUrlFromArgs(commandLine);
     if (state.win) {
       if (state.win.isMinimized()) state.win.restore();
       state.win.focus();
+      if (u) createTab(u);
     }
   });
 
   app.whenReady().then(() => {
     log('whenReady begin');
+    app.setAppUserModelId('nova.browser');
     state.store = new Store(app.getPath('userData'));
     log('store ready');
+
+    if (app.isPackaged && !VERIFY) {
+      registerBrowser().then((ok) => log('registerBrowser: ' + ok));
+    }
 
     session.defaultSession.setPermissionCheckHandler((wc, permission, requestingOrigin, details) => {
       if (permission !== 'media' && permission !== 'mediaKeySystem') return false;
