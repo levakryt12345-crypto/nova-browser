@@ -15,8 +15,12 @@ class Store {
     this.settings = this._load('settings.json', DEFAULT_SETTINGS);
     this.bookmarks = this._load('bookmarks.json', []);
     this.history = this._load('history.json', []);
+    this.permissions = this._load('permissions.json', {});
     if (!Array.isArray(this.bookmarks)) this.bookmarks = [];
     if (!Array.isArray(this.history)) this.history = [];
+    if (typeof this.permissions !== 'object' || this.permissions === null || Array.isArray(this.permissions)) {
+      this.permissions = {};
+    }
   }
 
   _load(name, fallback) {
@@ -93,6 +97,42 @@ class Store {
   clearHistory() {
     this.history = [];
     this._save('history.json', this.history);
+  }
+
+  getPermissions() {
+    return this.permissions;
+  }
+
+  getPermission(domain, kind) {
+    const rec = this.permissions[domain];
+    if (rec && rec[kind]) return rec[kind];
+    return null;
+  }
+
+  setPermission(domain, kind, value) {
+    if (!domain) return;
+    const rec = this.permissions[domain] || {};
+    if (value === null || value === undefined) {
+      delete rec[kind];
+    } else {
+      rec[kind] = value;
+    }
+    if (Object.keys(rec).length === 0) {
+      delete this.permissions[domain];
+    } else {
+      this.permissions[domain] = rec;
+    }
+    this._save('permissions.json', this.permissions);
+  }
+
+  clearPermission(domain) {
+    delete this.permissions[domain];
+    this._save('permissions.json', this.permissions);
+  }
+
+  clearPermissions() {
+    this.permissions = {};
+    this._save('permissions.json', this.permissions);
   }
 }
 

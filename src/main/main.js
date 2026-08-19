@@ -19,7 +19,10 @@ const Store = require('./store');
 const PROJECT_ROOT = path.join(__dirname, '..', '..');
 const INDEX_HTML = path.join(__dirname, '..', 'renderer', 'index.html');
 const PRELOAD = path.join(__dirname, '..', 'preload', 'preload.js');
+const SETTINGS_HTML = path.join(__dirname, '..', 'renderer', 'settings.html');
 const ICON_PNG = path.join(PROJECT_ROOT, 'assets', 'icon.png');
+
+const SETTINGS_URL = 'nova://settings';
 
 const CHROME_HEIGHT = 88;
 const DEFAULT_SETTINGS = {
@@ -67,6 +70,8 @@ const state = {
   dlSeq: 0,
   popover: null,
   verifyTimer: null,
+  pendingPerm: new Map(),
+  permSeq: 0,
 };
 
 const CRASH_LOG = path.join(PROJECT_ROOT, 'crash.log');
@@ -154,7 +159,7 @@ function layout() {
 }
 
 function recordHistory(tab) {
-  if (!tab.url || /^(about|chrome|devtools|data):/i.test(tab.url)) return;
+  if (!tab.url || /^(about|chrome|devtools|data|nova|file):/i.test(tab.url)) return;
   state.store.addHistory({ url: tab.url, title: tab.title });
   broadcast('data:changed', { bookmarks: state.store.getBookmarks(), history: state.store.getHistory(), settings: settings() });
 }
@@ -193,6 +198,7 @@ function activateTab(id) {
 
 function createTab(rawUrl, opts = {}) {
   const url = normalizeUrl(rawUrl, !!opts.strict);
+  if (url === SETTINGS_URL) return createSettingsTab();
   const id = state.seq++;
   const view = new WebContentsView({
     webPreferences: {
@@ -296,6 +302,63 @@ function createTab(rawUrl, opts = {}) {
   return id;
 }
 
+function createSettingsTab() {
+  const id = state.seq++;
+  const view = new WebContentsView({
+    webPreferences: {
+      preload: PRELOAD,
+      sandbox: true,
+      contextIsolation: true,
+      nodeIntegration: false,
+      spellcheck: false,
+      backgroundThrottling: true,
+    },
+  });
+  const wc = view.webContents;
+  view.setBackgroundColor(resolvedTheme() === 'dark' ? '#191a1f' : '#ffffff');
+
+  const tab = {
+    id,
+    view,
+    wc,
+    special: 'settings',
+    title: 'Настройки',
+    url: SETTINGS_URL,
+    favicon: null,
+    canBack: false,
+    canForward: false,
+    loading: true,
+  };
+  state.tabs.set(id, tab);
+  state.order.push(id);
+  state.win.contentView.addChildView(view);
+
+  wc.setWindowOpenHandler(() => ({ action: 'deny' }));
+  wc.on('will-navigate', (e) => e.preventDefault());
+  wc.on('page-title-updated', (e, title) => {
+    tab.title = title || 'Настройки';
+    tabDirty(id);
+  });
+  wc.on('did-start-loading', () => {
+    tab.loading = true;
+    tabDirty(id);
+  });
+  wc.on('did-stop-loading', () => {
+    tab.loading = false;
+    tab.url = SETTINGS_URL;
+    tabDirty(id);
+  });
+  wc.on('did-navigate', (e, u) => {
+    if (u && u.startsWith('file:') && u.endsWith('settings.html')) tab.url = SETTINGS_URL;
+    tabDirty(id);
+  });
+
+  activateTab(id);
+  wc.loadFile(SETTINGS_HTML);
+  if (VERIFY && state.order.length === 1) setupVerify(wc, id);
+  return id;
+}
+
 function closeTab(id) {
   const t = state.tabs.get(id);
   if (!t) return;
@@ -318,6 +381,7 @@ function closeTab(id) {
 function normalizeUrl(input, strict = false) {
   const s = (input || '').trim();
   if (!s) return settings().homePage;
+  if (/^nova:(\/\/)?settings$/i.test(s)) return SETTINGS_URL;
   if (strict && (/^localhost(:\d+)?([/?#][^\s]*)?$/i.test(s) || /^\d{1,3}(\.\d{1,3}){3}(:\d+)?([/?#][^\s]*)?$/.test(s))) return 'https://' + s;
   const m = /^([a-z][a-z0-9+.-]*):/i.exec(s);
   if (m) {
@@ -341,7 +405,16 @@ function activeTab() {
 function navigateTo(url) {
   const t = activeTab();
   if (!t) return;
-  t.wc.loadURL(normalizeUrl(url, true));
+  const u = normalizeUrl(url, true);
+  if (u === SETTINGS_URL) {
+    if (t.special === 'settings') {
+      t.wc.loadFile(SETTINGS_HTML);
+    } else {
+      createSettingsTab();
+    }
+    return;
+  }
+  t.wc.loadURL(u);
 }
 
 function goBack(id) {
@@ -397,6 +470,20 @@ function snapshot() {
     userData: app.getPath('userData'),
     isVerify: VERIFY,
   };
+}
+
+function permissionDomain(requestingUrl, fallbackUrl) {
+  try {
+    const u = new URL(requestingUrl || fallbackUrl || '');
+    return u.hostname || null;
+  } catch {
+    return null;
+  }
+}
+
+function permissionKind(permission) {
+  if (permission === 'media') return 'media';
+  return permission;
 }
 
 function setupIpc() {
@@ -484,6 +571,32 @@ function setupIpc() {
   ipcMain.handle('popover:hide', () => popoverHide());
 
   ipcMain.handle('app:open-data-folder', () => shell.openPath(app.getPath('userData')));
+
+  ipcMain.handle('permission:respond', (e, { requestId, allow, remember } = {}) => {
+    const rec = state.pendingPerm.get(requestId);
+    if (!rec || rec.answered) return;
+    rec.answered = true;
+    clearTimeout(rec.timer);
+    rec.callback(!!allow);
+    state.pendingPerm.delete(requestId);
+  });
+
+  ipcMain.handle('permission:get-all', () => state.store.getPermissions());
+
+  ipcMain.handle('permission:set', (e, { domain, kind, value } = {}) => {
+    state.store.setPermission(String(domain || ''), String(kind || ''), value || null);
+    return state.store.getPermissions();
+  });
+
+  ipcMain.handle('permission:clear', (e, domain) => {
+    state.store.clearPermission(String(domain || ''));
+    return state.store.getPermissions();
+  });
+
+  ipcMain.handle('permission:clear-all', () => {
+    state.store.clearPermissions();
+    return state.store.getPermissions();
+  });
 }
 
 class Popover {
@@ -768,10 +881,42 @@ if (!gotLock) {
     state.store = new Store(app.getPath('userData'));
     log('store ready');
 
-    session.defaultSession.setPermissionRequestHandler((wc, permission, callback) => {
-      callback(false);
+    session.defaultSession.setPermissionCheckHandler((wc, permission, requestingOrigin, details) => {
+      if (permission !== 'media' && permission !== 'mediaKeySystem') return false;
+      const domain = permissionDomain(details && details.requestingUrl, requestingOrigin);
+      if (!domain) return false;
+      return state.store.getPermission(domain, permissionKind(permission)) === 'allow';
     });
-    session.defaultSession.setPermissionCheckHandler(() => false);
+    session.defaultSession.setPermissionRequestHandler((wc, permission, callback, details) => {
+      if (permission !== 'media') {
+        callback(false);
+        return;
+      }
+      const domain = permissionDomain(details && details.requestingUrl, wc.getURL());
+      const kind = 'media';
+      if (!domain) {
+        callback(false);
+        return;
+      }
+      const saved = state.store.getPermission(domain, kind);
+      if (saved) {
+        callback(saved === 'allow');
+        return;
+      }
+      const requestId = ++state.permSeq;
+      const timer = setTimeout(() => {
+        const rec = state.pendingPerm.get(requestId);
+        if (rec && !rec.answered) {
+          rec.answered = true;
+          rec.callback(false);
+          state.pendingPerm.delete(requestId);
+        }
+      }, 60000);
+      state.pendingPerm.set(requestId, { callback, timer });
+      if (state.win && !state.win.isDestroyed()) {
+        state.win.webContents.send('permission:request', { requestId, domain, kind, permission });
+      }
+    });
 
     if (VERIFY) log('step: will-download handler');
     session.defaultSession.on('will-download', (event, item) => {

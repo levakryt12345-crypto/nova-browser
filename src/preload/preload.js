@@ -22,6 +22,11 @@ const INVOKE_CHANNELS = new Set([
   'popover:show',
   'popover:hide',
   'app:open-data-folder',
+  'permission:respond',
+  'permission:get-all',
+  'permission:set',
+  'permission:clear',
+  'permission:clear-all',
 ]);
 
 const EVENT_CHANNELS = new Set([
@@ -32,6 +37,7 @@ const EVENT_CHANNELS = new Set([
   'win:maximized',
   'flash:message',
   'cmd:focus-address',
+  'permission:request',
 ]);
 
 contextBridge.exposeInMainWorld('nova', {

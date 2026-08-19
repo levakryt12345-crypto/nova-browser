@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self'; img-src 'self' data:">
+  <title>Настройки — Nova Browser</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="settings-page">
+  <div class="set-wrap">
+    <header class="set-head">
+      <div class="set-logo"></div>
+      <div>
+        <h1>Настройки</h1>
+        <p>Nova Browser · адрес страницы: <code>nova://settings</code></p>
+      </div>
+    </header>
+
+    <section class="set-card">
+      <h2>Общие</h2>
+      <div class="form-row">
+        <label>Стартовая страница</label>
+        <input class="panel-input" id="set-home" spellcheck="false" autocomplete="off" placeholder="https://...">
+      </div>
+      <div class="form-row">
+        <label>Поисковик по умолчанию</label>
+        <select id="set-engine"></select>
+      </div>
+      <div class="form-row">
+        <label>Тема</label>
+        <div class="seg" id="set-theme">
+          <button data-v="system">Системная</button>
+          <button data-v="light">Светлая</button>
+          <button data-v="dark">Тёмная</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="set-card">
+      <div class="set-card-head">
+        <h2>Разрешения сайтов</h2>
+        <button class="btn small danger" id="perm-clear-all">Сбросить все</button>
+      </div>
+      <p class="set-desc">Когда сайт запрашивает камеру или микрофон, Nova показывает диалог «Разрешить / Отклонить». Если вы выбрали «Запомнить» — решение хранится здесь и применяется автоматически.</p>
+      <div id="perm-list" class="perm-list"></div>
+      <div id="perm-empty" class="perm-empty" hidden>Сохранённых разрешений нет.</div>
+    </section>
+
+    <section class="set-card">
+      <h2>О браузере</h2>
+      <div class="about-line" id="about-line"></div>
+      <div class="form-row">
+        <button class="btn small" id="set-data-folder">Открыть папку с данными</button>
+        <button class="btn small" id="set-clear-hist">Очистить историю</button>
+      </div>
+    </section>
+  </div>
+  <script src="settings.js"></script>
+</body>
+</html>

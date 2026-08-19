@@ -10,6 +10,7 @@ const ICONS = {
   close: '<path d="M6 6l12 12M18 6L6 18"/>',
   lock: '<rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/>',
   globe: '<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.5 3.8 5.6 3.8 9S14.5 18.5 12 21c-2.5-2.5-3.8-5.6-3.8-9S9.5 5.5 12 3z"/>',
+  cam: '<path d="M15 10l5-3v10l-5-3"/><rect x="3" y="6" width="12" height="12" rx="2"/>',
   star: '<path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z"/>',
   bookmark: '<path d="M6 4h12v17l-6-4-6 4z"/>',
   clock: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
@@ -214,6 +215,8 @@ function initMain() {
     addr.select();
   });
 
+  api.on('permission:request', (d) => showPermissionDialog(d));
+
   document.addEventListener('keydown', (e) => {
     if (e.ctrlKey && !e.altKey && !e.metaKey && e.key >= '1' && e.key <= '9') {
       const idx = Number(e.key) - 1;
@@ -327,6 +330,23 @@ function updateDlBadge() {
   } else {
     badge.hidden = true;
   }
+}
+
+function showPermissionDialog(d) {
+  const modal = $('#perm-modal');
+  if (!modal) return;
+  $('#perm-icon').innerHTML = icon(d.kind === 'media' ? 'cam' : 'shield', { size: 30 });
+  $('#perm-title').textContent = d.domain;
+  const what = d.kind === 'media' ? 'камере и микрофону' : 'разрешению «' + d.kind + '»';
+  $('#perm-sub').textContent = 'Сайт запрашивает доступ к ' + what + '.';
+  $('#perm-remember').checked = false;
+  modal.hidden = false;
+  const finish = (allow) => {
+    modal.hidden = true;
+    api.invoke('permission:respond', { requestId: d.requestId, allow, remember: $('#perm-remember').checked });
+  };
+  $('#perm-allow').onclick = () => finish(true);
+  $('#perm-deny').onclick = () => finish(false);
 }
 
 function initPopover() {
