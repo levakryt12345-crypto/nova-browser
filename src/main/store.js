@@ -4,7 +4,7 @@ const fs = require('fs');
 const path = require('path');
 
 const DEFAULT_SETTINGS = {
-  homePage: 'https://www.google.com',
+  homePage: 'nova://home',
   searchEngine: 'google',
   theme: 'system',
   restoreTabs: true,
@@ -14,6 +14,16 @@ const DEFAULT_SETTINGS = {
   blockThirdPartyCookies: false,
   zoom: 1,
   downloadDir: null,
+  accent: 'violet',
+  uiScale: 'medium',
+  homeWallpaper: 'aurora',
+  showHomeLinks: true,
+  showHomeBookmarks: true,
+  showTabCloseAlways: false,
+  compactChrome: false,
+  clearOnExit: false,
+  downloadAsk: false,
+  confirmCloseTabs: false,
 };
 
 class Store {

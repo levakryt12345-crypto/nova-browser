@@ -81,7 +81,13 @@ async function init() {
   renderBookmarks(s.bookmarks, s.settings.showHomeBookmarks !== false);
 
   api.on('data:changed', (m) => {
-    if (m && m.bookmarks) renderBookmarks(m.bookmarks, (m.settings && m.settings.showHomeBookmarks) !== false);
+    if (!m) return;
+    if (m.settings && typeof m.settings.showHomeLinks === 'boolean') {
+      renderLinks(m.settings.showHomeLinks);
+    }
+    if (m.bookmarks) {
+      renderBookmarks(m.bookmarks, (m.settings && m.settings.showHomeBookmarks) !== false);
+    }
   });
   api.on('theme:changed', (m) => applyAppearance(m));
 }

@@ -461,7 +461,12 @@ function createHomeTab(existing) {
     tabDirty(id);
   });
   wc.on('did-navigate', (e, u) => {
-    if (u && u.startsWith('file:') && u.endsWith('home.html')) tab.url = HOME_URL;
+    if (u && u.startsWith('file:') && u.endsWith('home.html')) {
+      tab.url = HOME_URL;
+    } else {
+      tab.url = u;
+      tab.special = undefined;
+    }
     tabDirty(id);
   });
 
@@ -593,6 +598,7 @@ function navigateTo(url) {
   if (u === HOME_URL) {
     const existing = state.order.map((id) => state.tabs.get(id)).find((x) => x && x.special === 'home');
     if (existing) {
+      if (existing.url !== HOME_URL) existing.wc.loadFile(HOME_HTML);
       activateTab(existing.id);
       return;
     }
@@ -603,6 +609,7 @@ function navigateTo(url) {
     }
     return;
   }
+  if (t.special) t.special = undefined;
   t.wc.loadURL(u);
 }
 

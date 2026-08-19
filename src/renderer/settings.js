@@ -63,7 +63,7 @@ async function init() {
   permissions = (await api.invoke('permission:get-all')) || {};
   const set = s.settings || {};
 
-  document.documentElement.dataset.theme = s.theme || 'dark';
+  document.documentElement.dataset.theme = (s.appearance && s.appearance.theme) || s.theme || 'dark';
   document.documentElement.dataset.accent = (s.appearance && s.appearance.accent) || 'violet';
   document.documentElement.dataset.scale = (s.appearance && s.appearance.uiScale) || 'medium';
 
