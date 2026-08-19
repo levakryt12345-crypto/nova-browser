@@ -173,6 +173,7 @@ function initMain() {
     history: '#btn-history',
     downloads: '#btn-downloads',
     settings: '#btn-settings',
+    profile: '#btn-profile',
   };
   for (const [type, sel] of Object.entries(popoverAnchors)) {
     $(sel).addEventListener('click', (e) => {
@@ -359,6 +360,7 @@ function initPopover() {
     history: renderHistoryPanel,
     downloads: renderDownloadsPanel,
     settings: renderSettingsPanel,
+    profile: renderProfilePanel,
   };
   const app = $('#app');
   app.innerHTML = '';
@@ -573,6 +575,47 @@ function renderDownloadsPanel() {
   return panel;
 }
 
+function renderProfilePanel() {
+  const panel = document.createElement('div');
+  panel.className = 'panel';
+  panel.innerHTML = `
+    <div class="panel-header">
+      <h2>Профиль</h2>
+      <div class="grow"></div>
+    </div>
+    <div class="profile-scroll">
+      <div class="profile-hero">
+        <img class="profile-avatar" src="avatar.png" alt="Аватар">
+        <div class="profile-name">Nova</div>
+        <div class="profile-sub">Профиль браузера · данные хранятся локально</div>
+      </div>
+      <div class="form-row">
+        <label>Тема</label>
+        <div class="seg" id="pro-theme">
+          <button data-v="system" class="${store.settings.theme === 'system' ? 'on' : ''}">Системная</button>
+          <button data-v="light" class="${store.settings.theme === 'light' ? 'on' : ''}">Светлая</button>
+          <button data-v="dark" class="${store.settings.theme === 'dark' ? 'on' : ''}">Тёмная</button>
+        </div>
+      </div>
+      <div class="form-row">
+        <button class="btn small" id="pro-dl-folder">${icon('folder', { size: 13 })} Папка загрузок</button>
+        <button class="btn small" id="pro-data-folder">${icon('open', { size: 13 })} Данные браузера</button>
+      </div>
+      <div class="about-line">Nova Browser v${escapeHtml(store.version)} · движок Chromium (Electron)</div>
+    </div>`;
+  const themeBtns = panel.querySelectorAll('#pro-theme button');
+  themeBtns.forEach((b) =>
+    b.addEventListener('click', () => {
+      themeBtns.forEach((x) => x.classList.remove('on'));
+      b.classList.add('on');
+      api.invoke('settings:set', { theme: b.dataset.v });
+    })
+  );
+  panel.querySelector('#pro-dl-folder').addEventListener('click', () => api.invoke('app:open-downloads-folder'));
+  panel.querySelector('#pro-data-folder').addEventListener('click', () => api.invoke('app:open-data-folder'));
+  return panel;
+}
+
 function renderSettingsPanel() {
   const panel = document.createElement('div');
   panel.className = 'panel';
@@ -582,6 +625,7 @@ function renderSettingsPanel() {
     .join('');
   panel.innerHTML = `
     <div class="panel-header">
+      <img class="header-avatar" src="avatar.png" alt="">
       <h2>${icon('gear')} Настройки</h2>
       <div class="grow"></div>
     </div>

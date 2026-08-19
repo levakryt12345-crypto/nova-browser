@@ -8,6 +8,7 @@ const {
   shell,
   Menu,
   nativeTheme,
+  nativeImage,
   dialog,
   session,
   screen,
@@ -21,6 +22,7 @@ const INDEX_HTML = path.join(__dirname, '..', 'renderer', 'index.html');
 const PRELOAD = path.join(__dirname, '..', 'preload', 'preload.js');
 const SETTINGS_HTML = path.join(__dirname, '..', 'renderer', 'settings.html');
 const ICON_PNG = path.join(PROJECT_ROOT, 'assets', 'icon.png');
+const AVATAR_PNG = path.join(PROJECT_ROOT, 'assets', 'avatar.png');
 
 const SETTINGS_URL = 'nova://settings';
 
@@ -43,6 +45,7 @@ const POPOVER_SIZES = {
   history: { width: 400, height: 448 },
   downloads: { width: 400, height: 368 },
   settings: { width: 400, height: 452 },
+  profile: { width: 320, height: 428 },
 };
 
 function argValue(name) {
@@ -571,6 +574,8 @@ function setupIpc() {
   ipcMain.handle('popover:hide', () => popoverHide());
 
   ipcMain.handle('app:open-data-folder', () => shell.openPath(app.getPath('userData')));
+
+  ipcMain.handle('app:open-downloads-folder', () => shell.openPath(app.getPath('downloads')));
 
   ipcMain.handle('permission:respond', (e, { requestId, allow, remember } = {}) => {
     const rec = state.pendingPerm.get(requestId);
