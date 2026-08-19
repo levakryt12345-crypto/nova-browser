@@ -79,18 +79,9 @@ async function init() {
 
   $('#set-engine').addEventListener('change', (e) => api.invoke('settings:set', { searchEngine: e.target.value }));
 
-  const themeBtns = document.querySelectorAll('#set-theme button');
-  const setTheme = (t) => {
-    themeBtns.forEach((b) => b.classList.toggle('on', b.dataset.v === t));
-  };
-  setTheme(set.theme || 'system');
-  themeBtns.forEach((b) =>
-    b.addEventListener('click', () => {
-      const t = b.dataset.v;
-      setTheme(t);
-      api.invoke('settings:set', { theme: t });
-    })
-  );
+  const themeSel = $('#set-theme');
+  themeSel.value = set.theme || 'system';
+  themeSel.addEventListener('change', (e) => api.invoke('settings:set', { theme: e.target.value }));
 
   const zoomSel = $('#set-zoom');
   zoomSel.value = String(set.zoom === undefined ? 1 : set.zoom);

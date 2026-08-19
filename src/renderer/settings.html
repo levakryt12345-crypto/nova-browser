@@ -8,34 +8,28 @@
 </head>
 <body class="settings-page">
   <div class="set-wrap">
-    <header class="set-head">
-      <div class="set-logo"></div>
-      <div>
-        <h1>Настройки</h1>
-        <p>Nova Browser · адрес страницы: <code>nova://settings</code></p>
-      </div>
-    </header>
+    <h1 class="set-title">Настройки</h1>
 
-    <section class="set-card">
+    <div class="set-section">
       <h2>Общие</h2>
-      <div class="form-row">
-        <label>Стартовая страница</label>
+      <div class="set-field">
+        <label for="set-home">Стартовая страница</label>
         <input class="panel-input" id="set-home" spellcheck="false" autocomplete="off" placeholder="https://...">
       </div>
-      <div class="form-row">
-        <label>Поисковик по умолчанию</label>
+      <div class="set-field">
+        <label for="set-engine">Поисковик</label>
         <select id="set-engine"></select>
       </div>
-      <div class="form-row">
-        <label>Тема</label>
-        <div class="seg" id="set-theme">
-          <button data-v="system">Системная</button>
-          <button data-v="light">Светлая</button>
-          <button data-v="dark">Тёмная</button>
-        </div>
+      <div class="set-field">
+        <label for="set-theme">Тема</label>
+        <select id="set-theme">
+          <option value="system">Как в системе</option>
+          <option value="light">Светлая</option>
+          <option value="dark">Тёмная</option>
+        </select>
       </div>
-      <div class="form-row">
-        <label>Масштаб страниц по умолчанию</label>
+      <div class="set-field">
+        <label for="set-zoom">Масштаб</label>
         <select id="set-zoom">
           <option value="0.75">75%</option>
           <option value="0.9">90%</option>
@@ -46,66 +40,63 @@
           <option value="2">200%</option>
         </select>
       </div>
-    </section>
+    </div>
 
-    <section class="set-card">
+    <div class="set-section">
       <h2>Вкладки</h2>
       <label class="set-check">
         <input type="checkbox" id="set-restore-tabs">
-        <span><b>Восстанавливать вкладки</b><br>При запуске открывать все вкладки, которые были открыты при закрытии браузера</span>
+        <span>Восстанавливать вкладки после запуска</span>
       </label>
       <label class="set-check">
         <input type="checkbox" id="set-new-blank">
-        <span><b>Пустая новая вкладка</b><br>Новая вкладка (Ctrl+T) открывает пустую страницу вместо стартовой</span>
+        <span>Новая вкладка — пустая страница</span>
       </label>
-    </section>
+    </div>
 
-    <section class="set-card">
+    <div class="set-section">
       <h2>Приватность</h2>
       <label class="set-check">
         <input type="checkbox" id="set-history">
-        <span><b>Записывать историю</b><br>Сохранять посещённые страницы в историю</span>
+        <span>Записывать историю посещений</span>
       </label>
       <label class="set-check">
         <input type="checkbox" id="set-dnt">
-        <span><b>Do Not Track</b><br>Отправлять сайтам заголовок «не отслеживать» (DNT: 1)</span>
+        <span>Отправлять «Не отслеживать» (DNT)</span>
       </label>
       <label class="set-check">
         <input type="checkbox" id="set-thirdparty">
-        <span><b>Блокировать сторонние cookie</b><br>Не отправлять cookie сторонних сайтов при переходах между сайтами</span>
+        <span>Блокировать сторонние cookie</span>
       </label>
-      <p class="set-desc">Камера и микрофон — всегда по вашему согласию через диалог «Разрешить / Отклонить». Решения управляются в разделе «Разрешения сайтов» ниже.</p>
-    </section>
+    </div>
 
-    <section class="set-card">
+    <div class="set-section">
       <h2>Разрешения сайтов</h2>
-      <div class="set-card-head">
-        <button class="btn small danger" id="perm-clear-all">Сбросить все</button>
-      </div>
       <div id="perm-list" class="perm-list"></div>
       <div id="perm-empty" class="perm-empty" hidden>Сохранённых разрешений нет.</div>
-    </section>
+      <button class="btn small" id="perm-clear-all">Удалить все</button>
+    </div>
 
-    <section class="set-card">
+    <div class="set-section">
       <h2>Загрузки</h2>
-      <div class="form-row">
-        <label>Папка для загрузок</label>
+      <div class="set-field">
+        <label for="set-dl-dir">Папка для файлов</label>
         <div class="row-flex">
-          <input class="panel-input" id="set-dl-dir" readonly placeholder="По умолчанию (папка «Загрузки»)">
-          <button class="btn small" id="set-dl-dir-btn">Выбрать…</button>
+          <input class="panel-input" id="set-dl-dir" readonly placeholder="По умолчанию (Загрузки)">
+          <button class="btn small" id="set-dl-dir-btn">Выбрать</button>
         </div>
       </div>
-    </section>
+    </div>
 
-    <section class="set-card">
+    <div class="set-section">
       <h2>О браузере</h2>
       <div class="about-line" id="about-line"></div>
-      <div class="form-row row-flex">
-        <button class="btn small" id="set-data-folder">Открыть папку с данными</button>
+      <div class="row-flex">
+        <button class="btn small" id="set-data-folder">Папка с данными</button>
         <button class="btn small" id="set-clear-hist">Очистить историю</button>
-        <button class="btn small danger" id="set-reset">Сбросить все настройки</button>
+        <button class="btn small danger" id="set-reset">Сбросить настройки</button>
       </div>
-    </section>
+    </div>
   </div>
   <script src="settings.js"></script>
 </body>
