@@ -6,9 +6,8 @@
 
 ## Документация и установка
 
-Сайт документации (возможности, установка на ПК и телефон, сборка из исходников, FAQ) —
-откройте `docs/index.html` в браузере или опубликуйте папку `docs/` на GitHub Pages
-(workflow `deploy-pages.yml` уже настроен). Скачивание с сайта:
+Сайт документации опубликован на GitHub Pages: <https://levakryt12345-crypto.github.io/nova-browser/>
+(папка `docs/`, ветка `main`, включается в Settings → Pages → Deploy from a branch).
 
 - `docs/downloads/NovaBrowser-1.0.0-portable.exe` — версия для Windows
 - `docs/downloads/NovaMobile-1.0.0.zip` — отдельная мобильная версия (PWA, Android/iOS)
@@ -17,8 +16,8 @@
 ## Мобильная версия (Android)
 
 - `docs/mobile/` — Nova Mobile (PWA): устанавливается на главный экран как приложение
-- `android/` — нативный WebView-браузер на Java (Gradle). APK собирается автоматически
-  на GitHub Actions (`.github/workflows/android.yml`), при теге `v*` публикуется в Releases
+- `android/` — нативный WebView-браузер на Java (Gradle). APK собирается на GitHub Actions
+  (`.github/workflows/android.yml`), при теге `v*` публикуется в Releases
 
 ## Возможности
 
